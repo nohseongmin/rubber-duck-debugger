@@ -1,22 +1,20 @@
 # Credits / 서드파티 애셋 출처
 
-이 프로젝트에 포함된 외부 애셋과 라이선스입니다. 재배포·상업이용 시 아래 저작자 표기를 유지해야 합니다.
+이 프로젝트에 포함된 애셋과 출처입니다. 현재 서드파티 저작자 표기가 필요한 애셋은 없습니다(사운드는 코드로 합성, 캐릭터는 프로젝트 소유 이미지).
 
 ## 사운드
 
-- **`assets/sounds/quack.mp3`** — "Mallard Duck Quacking"
-  - 저작자(Author): **Mike Koenig**
-  - 출처(Source): [SoundBible.com](https://soundbible.com/)
-  - 라이선스(License): **Creative Commons Attribution 3.0 (CC BY 3.0)** — https://creativecommons.org/licenses/by/3.0/
-  - 상업적 이용 가능. **저작자 표기 필수**(본 문서로 표기 충족). 동일조건변경허락(Share-Alike) 의무 없음.
+- 기본 "꽥"은 Web Audio API로 **실시간 합성**합니다(포함된 오디오 파일 없음). 설정에서 사용자가 자신의 사운드 파일을 지정할 수 있습니다.
 
-## 아이콘
+## 캐릭터 이미지
 
-- **`assets/icon.png`, `assets/tray.png`** — 프로젝트 자체 생성물(`scripts/gen-icons.js`, 순수 Node로 그림). 별도 라이선스 제약 없음.
+- **`assets/duck.png`** — 프로젝트 소유자가 생성한 고무오리 이미지(AI 이미지 생성 도구 사용). 생성자가 저작권/상업이용 권리를 보유. 투명 배경.
+- **`assets/icon.png`, `assets/tray.png`** — 위 `duck.png`를 리사이즈해 만든 앱/트레이 아이콘.
+- 대안: `scripts/gen-icons.js`(순수 Node)로 placeholder 아이콘을 재생성할 수 있습니다.
 
-## 기본 캐릭터
+## 이모지
 
-- 기본 캐릭터는 유니코드 이모지(🦆)를 렌더링한 것으로, 별도 이미지 애셋을 포함하지 않습니다. 사용자가 설정에서 자신의 이미지로 교체할 수 있습니다.
+- 설정에서 캐릭터를 이모지로 바꾸면 유니코드 이모지(🦆 등)를 렌더링하며, 별도 이미지 애셋을 포함하지 않습니다.
 
 ---
 

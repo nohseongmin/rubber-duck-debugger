@@ -4,7 +4,7 @@ const path = require('path');
 const { app } = require('electron');
 
 const DEFAULTS = {
-  character: { type: 'emoji', emoji: '🦆', imagePath: null, size: 110 },
+  character: { type: 'default', emoji: '🦆', imagePath: null, size: 120 },
   phrases: [
     '꽥!',
     '꽥꽥!',
@@ -13,7 +13,7 @@ const DEFAULTS = {
     '거기서 진짜 그 값이 맞아?',
     '버그… 방금 찾았지?'
   ],
-  sound: { type: 'default', filePath: null, volume: 0.6 },
+  sound: { type: 'synth', filePath: null, volume: 0.6 },
   bubbleDuration: 2200,
   alwaysOnTop: true,
   position: null // {x, y} 또는 null(=우하단 기본 위치)

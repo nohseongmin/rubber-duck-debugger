@@ -6,9 +6,8 @@ let current = null;
 function fill(cfg) {
   current = cfg;
   const ch = cfg.character || {};
-  document.querySelector(
-    `input[name=charType][value=${ch.type === 'image' ? 'image' : 'emoji'}]`
-  ).checked = true;
+  const charType = ['default', 'emoji', 'image'].includes(ch.type) ? ch.type : 'default';
+  document.querySelector(`input[name=charType][value=${charType}]`).checked = true;
   $('emoji').value = ch.emoji || '🦆';
   $('imagePath').value = ch.imagePath || '';
   $('size').value = ch.size || 110;
@@ -18,7 +17,7 @@ function fill(cfg) {
   $('bubbleDuration').value = cfg.bubbleDuration || 2200;
 
   const s = cfg.sound || {};
-  const soundType = ['default', 'synth', 'file'].includes(s.type) ? s.type : 'default';
+  const soundType = s.type === 'file' ? 'file' : 'synth';
   document.querySelector(`input[name=soundType][value=${soundType}]`).checked = true;
   $('soundPath').value = s.filePath || '';
   const vol = typeof s.volume === 'number' ? s.volume : 0.6;
@@ -36,9 +35,12 @@ function renderPreview() {
   if (type === 'image' && $('imagePath').value) {
     const src = 'file://' + $('imagePath').value.replace(/\\/g, '/');
     p.innerHTML = `<img src="${src}" style="width:${size}px">`;
-  } else {
+  } else if (type === 'emoji') {
     const emoji = $('emoji').value || '🦆';
     p.innerHTML = `<span style="font-size:${size}px">${emoji}</span>`;
+  } else {
+    // 'default' → 내장 오리 이미지 (settings 문서는 src/settings/)
+    p.innerHTML = `<img src="../../assets/duck.png" style="width:${size}px">`;
   }
 }
 

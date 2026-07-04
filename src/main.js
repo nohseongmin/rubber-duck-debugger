@@ -1,7 +1,9 @@
 'use strict';
-const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, shell } = require('electron');
 const path = require('path');
 const config = require('./config');
+
+const REPO_URL = 'https://github.com/nohseongmin/rubber-duck-debugger';
 
 let duckWin = null;
 let settingsWin = null;
@@ -85,7 +87,7 @@ function trayImage() {
 function buildTray() {
   tray = new Tray(trayImage());
   const menu = Menu.buildFromTemplate([
-    { label: '🦆 러버덕 디버거', enabled: false },
+    { label: '🦆 러버덕 디버거 (GitHub)', click: () => shell.openExternal(REPO_URL) },
     { type: 'separator' },
     { label: '꽥! 테스트', click: () => duckWin && duckWin.webContents.send('quack') },
     { label: '설정…', click: openSettings },
@@ -132,7 +134,7 @@ ipcMain.on('quit', () => { isQuitting = true; app.quit(); });
 ipcMain.handle('pick-file', async (_e, kind) => {
   const filters = kind === 'sound'
     ? [{ name: '오디오', extensions: ['mp3', 'wav', 'ogg', 'm4a', 'flac'] }]
-    : [{ name: '이미지', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'] }];
+    : [{ name: '이미지/GIF', extensions: ['png', 'gif', 'apng', 'webp', 'jpg', 'jpeg', 'bmp'] }];
   const res = await dialog.showOpenDialog(settingsWin || undefined, {
     properties: ['openFile'],
     filters
