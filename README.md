@@ -1,0 +1,80 @@
+# 🦆 Rubber Duck Debugger (러버덕 디버거)
+
+바탕화면 위에 고무오리를 띄워두는 데스크탑 위젯. 코드가 안 풀릴 때 오리를 클릭하면 **"꽥!"** 소리와 함께 말풍선으로 대꾸해 준다. Steam의 Bongo Cat처럼 항상 화면 위에 상주하고, **이미지·문구·소리를 전부 커스텀**할 수 있다.
+
+> 러버덕 디버깅(Rubber Duck Debugging): 막힌 코드를 고무오리에게 한 줄씩 소리 내어 설명하다 보면 스스로 버그를 찾게 된다는 개발자들의 오랜 디버깅 기법.
+
+## ✨ 기능
+
+- **바탕화면 상주**: 투명·프레임 없음·항상 위 표시. 오리만 떠 있고 배경은 안 보인다.
+- **클릭하면 꽥**: 오리를 누르면 합성된 "꽥" 소리 + 랜덤 문구 말풍선 + 스퀴시 애니메이션.
+- **드래그 이동**: 오리를 잡고 끌어 원하는 위치로. 위치는 자동 저장.
+- **빈 곳은 클릭 투과**: 오리 이외 영역은 마우스가 통과해서 바탕화면 아이콘을 그대로 쓸 수 있다.
+- **완전 커스텀**: 캐릭터(이모지/내 이미지 파일·크기), 말풍선 문구 목록, 소리(기본 합성/내 사운드 파일·볼륨), 표시 시간까지 설정창에서 변경.
+- **트레이 상주**: 트레이 아이콘 클릭으로 꽥 테스트 / 설정 / 종료.
+
+> 기본 캐릭터 이미지와 사운드는 아직 **플레이스홀더**(🦆 이모지 + Web Audio 합성음)다. 설정에서 원하는 이미지/사운드 파일로 바꾸면 된다.
+
+## 🚀 실행 방법
+
+```bash
+# 1) 의존성 설치
+npm install
+
+# 2) 아이콘 애셋 생성 (최초 1회, 또는 아이콘 바꿀 때)
+npm run gen-icons
+
+# 3) 실행
+npm start
+```
+
+실행하면 화면 우하단에 오리가 나타난다. 클릭 → 꽥! 설정은 트레이 아이콘 → "설정…".
+
+### 배포용 설치파일 빌드
+
+```bash
+npm run dist
+```
+
+`electron-builder`로 Windows(nsis) / macOS(dmg) / Linux(AppImage) 설치파일을 만든다. (`dist/`에 출력)
+
+## 🧩 기술 스택
+
+- **Electron** — 메인 프로세스(Node) + 렌더러(HTML/CSS/JS)
+- **Web Audio API** — 의존성 없이 실시간 "꽥" 합성
+- **자체 JSON 설정 저장** — `userData/config.json` (외부 스토어 의존성 없음)
+- **순수 Node PNG 생성기** — `scripts/gen-icons.js` (바이너리 애셋 미커밋)
+- **electron-builder** — 크로스플랫폼 패키징
+
+## 📁 프로젝트 구조
+
+```
+rubber-duck-debugger/
+├─ src/
+│  ├─ main.js          # Electron 메인: 창 생성, 트레이, IPC, 설정 저장
+│  ├─ preload.js       # 화이트리스트 IPC 브리지 (contextIsolation)
+│  ├─ config.js        # 설정 기본값 + JSON 로드/저장
+│  ├─ duck/            # 오리 위젯 (투명창): index.html, duck.css, duck.js
+│  └─ settings/        # 설정창: index.html, settings.css, settings.js
+├─ scripts/
+│  └─ gen-icons.js     # 아이콘 PNG 생성기
+├─ assets/             # 생성된 아이콘 (gen-icons 실행 시)
+├─ BLUEPRINT.md        # 기획/시장성/BM/보안/로드맵
+└─ package.json
+```
+
+## 🔐 보안
+
+- 렌더러는 `contextIsolation: true`, `nodeIntegration: false` — preload의 화이트리스트 IPC만 노출.
+- CSP로 원격 스크립트 차단(`script-src 'self'`), 로컬 파일만 로드.
+- 네트워크 통신·로그인·개인정보 수집 **없음**. 모든 설정은 로컬에만 저장.
+
+## 🗺️ 로드맵
+
+- **v0.2** — 스프라이트 애니메이션(대기/말하기), 가끔 혼잣말하는 자동 꽥
+- **v0.3** — 스킨팩 포맷(zip: 이미지+사운드+문구) import, 여러 마리 소환, 키입력 반응
+- **v1.0** — 스킨/사운드팩 판매, 자동 업데이트, 코드사이닝, Steam 출시
+
+## 📄 라이선스
+
+MIT

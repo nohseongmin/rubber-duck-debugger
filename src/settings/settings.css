@@ -1,0 +1,88 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 18px 20px 26px;
+  font-family: "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+  color: #232323;
+  background: #f6f7f9;
+}
+h1 { font-size: 20px; margin: 0 0 14px; }
+h2 { font-size: 14px; margin: 0 0 10px; color: #444; }
+h2 small { color: #999; font-weight: 400; }
+
+section {
+  background: #fff;
+  border: 1px solid #e6e8ec;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.radios { display: flex; gap: 18px; margin-bottom: 10px; }
+.radios label { font-size: 14px; cursor: pointer; }
+
+.row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.lbl { width: 66px; font-size: 13px; color: #666; flex: none; }
+.val { font-size: 13px; color: #666; min-width: 42px; }
+
+input[type="text"], input[type="number"], textarea {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #d4d7dd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+}
+input[readonly] { background: #f0f1f4; color: #555; }
+input[type="range"] { flex: 1; }
+textarea { width: 100%; resize: vertical; line-height: 1.5; }
+
+button {
+  padding: 7px 14px;
+  border: 1px solid #d4d7dd;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+button:hover { background: #f0f1f4; }
+button.primary { background: #ffcf33; border-color: #f0bd00; font-weight: 700; }
+button.primary:hover { background: #ffc400; }
+
+.checkbox { font-size: 14px; cursor: pointer; }
+
+.preview {
+  margin-top: 12px;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-conic-gradient(#eef0f3 0% 25%, #f8f9fb 0% 50%) 50% / 22px 22px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.preview img { max-height: 200px; }
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%) translateY(20px);
+  background: #232323;
+  color: #fff;
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

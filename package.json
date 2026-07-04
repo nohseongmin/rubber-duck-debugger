@@ -1,0 +1,37 @@
+{
+  "name": "rubber-duck-debugger",
+  "version": "0.1.0",
+  "description": "바탕화면 러버덕 디버깅 위젯 — 클릭하면 꽥! 이미지·소리·문구 커스텀.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "gen-icons": "node scripts/gen-icons.js",
+    "dist": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.rubberduck.debugger",
+    "productName": "RubberDuckDebugger",
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}
