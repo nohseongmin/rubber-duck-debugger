@@ -1,5 +1,9 @@
 'use strict';
 
+// 내장 기본 "꽥" — Mallard Duck Quacking by Mike Koenig (CC BY 3.0, soundbible.com)
+// 문서 위치(src/duck/) 기준 상대경로. 자세한 출처는 CREDITS.md 참고.
+const BUILTIN_QUACK = '../../assets/sounds/quack.mp3';
+
 let cfg = null;
 let audioCtx = null;
 let bubbleTimer = null;
@@ -91,6 +95,19 @@ function playCustomSound(filePath, volume) {
   }
 }
 
+function playBuiltinQuack(volume) {
+  try {
+    const a = new Audio(BUILTIN_QUACK);
+    a.volume = Math.max(0, Math.min(1, volume));
+    a.play().catch((err) => {
+      console.error('builtin quack failed, fallback to synth', err);
+      playSynthQuack(volume);
+    });
+  } catch (e) {
+    playSynthQuack(volume);
+  }
+}
+
 // ---- 말풍선 + 꽥 ----
 function showBubble() {
   const phrases = (cfg && Array.isArray(cfg.phrases) && cfg.phrases.length)
@@ -108,7 +125,8 @@ function quack() {
   const s = (cfg && cfg.sound) || {};
   const vol = typeof s.volume === 'number' ? s.volume : 0.6;
   if (s.type === 'file' && s.filePath) playCustomSound(s.filePath, vol);
-  else playSynthQuack(vol);
+  else if (s.type === 'synth') playSynthQuack(vol);
+  else playBuiltinQuack(vol); // 'default'
 
   showBubble();
   duckEl.classList.remove('squish');

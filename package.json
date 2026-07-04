@@ -21,6 +21,9 @@
       "src/**/*",
       "assets/**/*"
     ],
+    "asarUnpack": [
+      "assets/**/*"
+    ],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.png"

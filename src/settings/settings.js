@@ -18,9 +18,8 @@ function fill(cfg) {
   $('bubbleDuration').value = cfg.bubbleDuration || 2200;
 
   const s = cfg.sound || {};
-  document.querySelector(
-    `input[name=soundType][value=${s.type === 'file' ? 'file' : 'synth'}]`
-  ).checked = true;
+  const soundType = ['default', 'synth', 'file'].includes(s.type) ? s.type : 'default';
+  document.querySelector(`input[name=soundType][value=${soundType}]`).checked = true;
   $('soundPath').value = s.filePath || '';
   const vol = typeof s.volume === 'number' ? s.volume : 0.6;
   $('volume').value = vol;
