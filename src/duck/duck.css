@@ -5,8 +5,15 @@ html, body {
   overflow: hidden;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-user-drag: none;
   cursor: default;
   font-family: "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+}
+
+/* 이미지/오리 네이티브 드래그(유체이탈 고스트) 방지 */
+#duck, #duck-img, #duck-emoji, #hotzone {
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 #stage {
@@ -78,3 +85,46 @@ html, body {
   border-bottom: 0;
 }
 #bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+
+/* ---- 위치 이동 모드 ---- */
+#move-hint {
+  display: none;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 12px;
+  background: rgba(30, 30, 30, 0.92);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+#move-hint button {
+  border: 0;
+  border-radius: 12px;
+  padding: 4px 10px;
+  background: #ffcf33;
+  color: #222;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+#move-hint button:hover { background: #ffc400; }
+
+body.move-mode { cursor: move; }
+body.move-mode #move-hint { display: flex; }
+body.move-mode #bubble { display: none; }
+body.move-mode #hotzone {
+  outline: 2px dashed #ff9800;
+  outline-offset: 4px;
+  border-radius: 18px;
+  background: rgba(255, 152, 0, 0.10);
+  cursor: move;
+}
+body.move-mode #duck { cursor: move; }

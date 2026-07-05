@@ -52,6 +52,9 @@ button.primary:hover { background: #ffc400; }
 
 .checkbox { font-size: 14px; cursor: pointer; }
 
+.hint { display: block; margin-top: 8px; color: #999; font-size: 12px; line-height: 1.4; }
+#hotkey.capturing { border-color: #ffb300; background: #fff8e1; color: #a06800; font-weight: 700; }
+
 .preview {
   margin-top: 12px;
   min-height: 120px;

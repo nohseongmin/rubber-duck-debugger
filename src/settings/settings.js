@@ -2,6 +2,13 @@
 
 const $ = (id) => document.getElementById(id);
 let current = null;
+let hotkeyAccel = '';       // 저장용 Electron accelerator 문자열
+let capturingHotkey = false;
+
+// 표시용: 'CommandOrControl' → 'Ctrl'
+function accelLabel(accel) {
+  return accel ? accel.replace('CommandOrControl', 'Ctrl') : '';
+}
 
 function fill(cfg) {
   current = cfg;
@@ -25,6 +32,12 @@ function fill(cfg) {
   $('volVal').textContent = Math.round(vol * 100) + '%';
 
   $('alwaysOnTop').checked = cfg.alwaysOnTop !== false;
+
+  hotkeyAccel = cfg.hotkey || '';
+  $('hotkey').value = accelLabel(hotkeyAccel);
+  capturingHotkey = false;
+  $('hotkey').classList.remove('capturing');
+
   renderPreview();
 }
 
@@ -62,9 +75,53 @@ function collect() {
       filePath: $('soundPath').value || null,
       volume: parseFloat($('volume').value)
     },
+    hotkey: hotkeyAccel || null,
     alwaysOnTop: $('alwaysOnTop').checked
   };
 }
+
+// ---- 단축키 캡처 ----
+function keyName(e) {
+  const k = e.key;
+  if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(k)) return null;
+  if (k === ' ') return 'Space';
+  if (k.startsWith('Arrow')) return k.slice(5); // Up/Down/Left/Right
+  if (/^F([1-9]|1[0-9]|2[0-4])$/.test(k)) return k; // F1~F24
+  if (k.length === 1) return k.toUpperCase();
+  const named = ['Home', 'End', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Backspace', 'Tab', 'Plus'];
+  if (k === 'Enter') return 'Return';
+  if (named.includes(k)) return k;
+  return null;
+}
+
+function endCapture(accel) {
+  capturingHotkey = false;
+  hotkeyAccel = accel;
+  $('hotkey').classList.remove('capturing');
+  $('hotkey').value = accelLabel(accel);
+}
+
+$('hotkeySet').addEventListener('click', () => {
+  capturingHotkey = true;
+  $('hotkey').classList.add('capturing');
+  $('hotkey').value = '키 조합을 누르세요…';
+});
+$('hotkeyClear').addEventListener('click', () => endCapture(''));
+
+window.addEventListener('keydown', (e) => {
+  if (!capturingHotkey) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.key === 'Escape') { endCapture(hotkeyAccel); return; } // 취소: 이전 값 유지
+  const mods = [];
+  if (e.ctrlKey || e.metaKey) mods.push('CommandOrControl');
+  if (e.altKey) mods.push('Alt');
+  if (e.shiftKey) mods.push('Shift');
+  const name = keyName(e);
+  if (!name) return;                                   // 아직 수식키만 눌림 → 대기
+  if (mods.length === 0 && name.length === 1) return;  // 단일 문자키는 수식키 필요
+  endCapture([...mods, name].join('+'));
+}, true);
 
 // ---- 라이브 프리뷰 갱신 ----
 ['input', 'change'].forEach((ev) => {

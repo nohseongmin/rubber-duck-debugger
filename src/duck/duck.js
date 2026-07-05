@@ -123,16 +123,42 @@ function quack() {
   duckEl.classList.add('squish');
 }
 
-// ---- 드래그 이동 + 클릭 판정 + 빈 영역 클릭 투과 ----
+// ---- 상호작용: 좌클릭=꽥 · 우클릭=메뉴 · 이동모드=드래그 ----
+const moveDoneBtn = document.getElementById('move-done');
+
+let moveMode = false;
 let dragging = false;
-let moved = false;
 let startSX = 0, startSY = 0;
 let winX = 0, winY = 0;
 
-hotzone.addEventListener('mousedown', async (e) => {
-  if (e.button !== 0) return;
+// 네이티브 이미지 드래그(유체이탈 고스트) 완전 차단
+window.addEventListener('dragstart', (e) => e.preventDefault());
+
+// 일반 모드: 오리 좌클릭 → 꽥
+duckEl.addEventListener('click', () => { if (!moveMode) quack(); });
+
+// 우클릭 → 메인의 네이티브 컨텍스트 메뉴 (위치 이동 / 설정 / 닫기)
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  window.api.showDuckMenu();
+});
+
+// 이동 모드 진입/해제는 메인이 알려줌
+window.api.onMoveMode((on) => {
+  moveMode = on;
+  document.body.classList.toggle('move-mode', on);
+});
+
+// 이동 모드: 완료 버튼 / Esc 로 빠져나오기
+moveDoneBtn.addEventListener('click', () => window.api.exitMoveMode());
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && moveMode) window.api.exitMoveMode();
+});
+
+// 이동 모드: 아무 데나 잡고 드래그하면 창이 따라옴
+window.addEventListener('mousedown', async (e) => {
+  if (!moveMode || e.button !== 0) return;
   dragging = true;
-  moved = false;
   startSX = e.screenX;
   startSY = e.screenY;
   try {
@@ -144,26 +170,21 @@ hotzone.addEventListener('mousedown', async (e) => {
 });
 
 window.addEventListener('mousemove', (e) => {
-  if (dragging) {
-    const dx = e.screenX - startSX;
-    const dy = e.screenY - startSY;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-    window.api.moveWindow(winX + dx, winY + dy);
-    return;
+  if (moveMode) {
+    if (dragging) {
+      window.api.moveWindow(winX + (e.screenX - startSX), winY + (e.screenY - startSY));
+    }
+    return; // 이동 모드에서는 투과 토글하지 않음(창 전체가 잡힘)
   }
-  // 오리(hotzone) 위에서만 창을 클릭 가능 상태로, 그 외엔 투과
+  // 일반 모드: 오리(hotzone) 위에서만 클릭 가능, 그 외엔 클릭 투과
   const el = document.elementFromPoint(e.clientX, e.clientY);
   const over = !!(el && el.closest('#hotzone'));
   window.api.setMouseThrough(!over);
 });
 
-window.addEventListener('mouseup', async (e) => {
-  if (!dragging) return;
+window.addEventListener('mouseup', async () => {
+  if (!moveMode || !dragging) return;
   dragging = false;
-  if (!moved) {
-    quack();
-    return;
-  }
   try {
     const pos = await window.api.getWindowPos();
     window.api.savePosition(pos[0], pos[1]);

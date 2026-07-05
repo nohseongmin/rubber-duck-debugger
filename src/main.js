@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, shell } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, shell, globalShortcut } = require('electron');
 const path = require('path');
 const config = require('./config');
 
@@ -9,6 +9,7 @@ let duckWin = null;
 let settingsWin = null;
 let tray = null;
 let isQuitting = false;
+let moveMode = false;
 
 const DUCK_W = 240;
 const DUCK_H = 220;
@@ -61,6 +62,8 @@ function createDuckWindow() {
 
 function openSettings() {
   if (settingsWin) { settingsWin.focus(); return; }
+  // 설정 중에는 전역 단축키를 잠시 해제해야 단축키 캡처가 창에 정상 전달됨
+  globalShortcut.unregisterAll();
   settingsWin = new BrowserWindow({
     width: 480,
     height: 700,
@@ -75,7 +78,7 @@ function openSettings() {
   });
   settingsWin.setMenuBarVisibility(false);
   settingsWin.loadFile(path.join(__dirname, 'settings', 'index.html'));
-  settingsWin.on('closed', () => { settingsWin = null; });
+  settingsWin.on('closed', () => { settingsWin = null; applyHotkey(); });
 }
 
 function trayImage() {
@@ -89,7 +92,8 @@ function buildTray() {
   const menu = Menu.buildFromTemplate([
     { label: '🦆 러버덕 디버거 (GitHub)', click: () => shell.openExternal(REPO_URL) },
     { type: 'separator' },
-    { label: '꽥! 테스트', click: () => duckWin && duckWin.webContents.send('quack') },
+    { label: '꽥! 테스트', click: quackNow },
+    { label: '위치 이동', click: () => setMoveMode(true) },
     { label: '설정…', click: openSettings },
     { type: 'separator' },
     { label: '종료', click: () => { isQuitting = true; app.quit(); } }
@@ -97,6 +101,50 @@ function buildTray() {
   tray.setToolTip('러버덕 디버거 — 클릭하면 꽥!');
   tray.setContextMenu(menu);
   tray.on('click', () => duckWin && duckWin.webContents.send('quack'));
+}
+
+function quackNow() {
+  if (duckWin) duckWin.webContents.send('quack');
+}
+
+// 위치 이동 모드 토글: 창 전체를 잡을 수 있게 하고 렌더러에 알림
+function setMoveMode(on) {
+  moveMode = on;
+  if (!duckWin) return;
+  if (on) {
+    duckWin.setIgnoreMouseEvents(false);
+    duckWin.focus(); // Esc 입력을 받기 위해
+  } else {
+    duckWin.setIgnoreMouseEvents(true, { forward: true });
+  }
+  duckWin.webContents.send('move-mode', on);
+}
+
+// 오리 우클릭 메뉴
+function popupDuckMenu() {
+  if (!duckWin) return;
+  const menu = Menu.buildFromTemplate([
+    { label: moveMode ? '✓ 이동 완료' : '위치 이동', click: () => setMoveMode(!moveMode) },
+    { label: '설정…', click: openSettings },
+    { type: 'separator' },
+    { label: '🦆 러버덕 디버거 (GitHub)', click: () => shell.openExternal(REPO_URL) },
+    { type: 'separator' },
+    { label: '닫기', click: () => { isQuitting = true; app.quit(); } }
+  ]);
+  menu.popup({ window: duckWin });
+}
+
+// 전역 단축키 등록(설정값 기준). 누르면 클릭과 동일하게 꽥.
+function applyHotkey() {
+  globalShortcut.unregisterAll();
+  const accel = config.load().hotkey;
+  if (!accel) return;
+  try {
+    const ok = globalShortcut.register(accel, quackNow);
+    if (!ok) console.warn('전역 단축키 등록 실패(충돌 가능):', accel);
+  } catch (e) {
+    console.warn('전역 단축키 오류:', accel, e.message);
+  }
 }
 
 // ---- IPC ----
@@ -108,6 +156,8 @@ ipcMain.handle('save-config', (_e, cfg) => {
     duckWin.setAlwaysOnTop(merged.alwaysOnTop);
     duckWin.webContents.send('config', merged);
   }
+  // 설정창이 열려 있는 동안엔 단축키 캡처를 위해 재등록을 미룸(창 닫힐 때 applyHotkey)
+  if (!settingsWin) applyHotkey();
   return merged;
 });
 
@@ -128,7 +178,9 @@ ipcMain.on('set-mouse-through', (_e, through) => {
 });
 
 ipcMain.on('open-settings', openSettings);
-ipcMain.on('test-quack', () => duckWin && duckWin.webContents.send('quack'));
+ipcMain.on('test-quack', quackNow);
+ipcMain.on('show-duck-menu', popupDuckMenu);
+ipcMain.on('exit-move-mode', () => setMoveMode(false));
 ipcMain.on('quit', () => { isQuitting = true; app.quit(); });
 
 ipcMain.handle('pick-file', async (_e, kind) => {
@@ -155,8 +207,11 @@ if (!gotLock) {
   app.whenReady().then(() => {
     createDuckWindow();
     buildTray();
+    applyHotkey();
     app.on('activate', () => { if (!duckWin) createDuckWindow(); });
   });
+
+  app.on('will-quit', () => globalShortcut.unregisterAll());
 
   // 트레이 상주 앱: 창이 다 닫혀도 종료하지 않음(트레이 '종료'로만 끝냄)
   app.on('window-all-closed', () => {
