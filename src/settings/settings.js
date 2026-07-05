@@ -43,17 +43,24 @@ function fill(cfg) {
 
 function renderPreview() {
   const type = document.querySelector('input[name=charType]:checked').value;
-  const size = $('size').value;
+  const size = parseInt($('size').value, 10) || 110;
   const p = $('preview');
-  if (type === 'image' && $('imagePath').value) {
-    const src = 'file://' + $('imagePath').value.replace(/\\/g, '/');
-    p.innerHTML = `<img src="${src}" style="width:${size}px">`;
-  } else if (type === 'emoji') {
-    const emoji = $('emoji').value || '🦆';
-    p.innerHTML = `<span style="font-size:${size}px">${emoji}</span>`;
+  // 사용자 입력(emoji 문구·이미지 경로)을 innerHTML 로 넣으면 렌더러 XSS — 이 렌더러는
+  // preload 로 IPC(api.quit/saveConfig 등)에 접근하므로 특히 위험. DOM API 로만 구성한다.
+  p.textContent = '';
+  if (type === 'emoji') {
+    const span = document.createElement('span');
+    span.style.fontSize = size + 'px';
+    span.textContent = $('emoji').value || '🦆';
+    p.appendChild(span);
   } else {
-    // 'default' → 내장 오리 이미지 (settings 문서는 src/settings/)
-    p.innerHTML = `<img src="../../assets/duck.png" style="width:${size}px">`;
+    // 'image'(사용자 파일) 또는 'default'(내장 오리)
+    const img = document.createElement('img');
+    img.style.width = size + 'px';
+    img.src = (type === 'image' && $('imagePath').value)
+      ? 'file://' + $('imagePath').value.replace(/\\/g, '/')
+      : '../../assets/duck.png';
+    p.appendChild(img);
   }
 }
 
