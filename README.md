@@ -1,6 +1,24 @@
 # 🦆 Rubber Duck Debugger (러버덕 디버거)
 
-바탕화면 위에 고무오리를 띄워두는 데스크탑 위젯. 코드가 안 풀릴 때 오리를 클릭하면 **"꽥!"** 소리와 함께 말풍선으로 대꾸해 준다. Steam의 Bongo Cat처럼 항상 화면 위에 상주하고, **이미지·문구·소리를 전부 커스텀**할 수 있다.
+<p align="center">
+  <img src="assets/demo.gif" alt="러버덕 디버거 데모 — 오리를 클릭하면 꽥!" width="480">
+</p>
+
+<p align="center">
+  바탕화면에 고무오리를 띄우고, 코드가 막힐 때 <b>클릭하면 "꽥!"</b> 하고 대꾸해주는 러버덕 디버깅 데스크탑 위젯.<br>
+  Steam의 Bongo Cat처럼 항상 화면 위에 상주하고, <b>이미지·GIF·문구·소리를 전부 커스텀</b>할 수 있다.
+</p>
+
+<p align="center">
+  <a href="https://github.com/nohseongmin/rubber-duck-debugger/releases/latest"><img src="https://img.shields.io/github/v/release/nohseongmin/rubber-duck-debugger?color=ffcf33&label=release" alt="release"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20x64-0078D6" alt="platform">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/nohseongmin/rubber-duck-debugger" alt="license"></a>
+  <a href="https://github.com/nohseongmin/rubber-duck-debugger/stargazers"><img src="https://img.shields.io/github/stars/nohseongmin/rubber-duck-debugger?style=social" alt="stars"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup-0.1.0.exe"><b>⬇️ 설치파일 다운로드 (Windows)</b></a>
+</p>
 
 > 러버덕 디버깅(Rubber Duck Debugging): 막힌 코드를 고무오리에게 한 줄씩 소리 내어 설명하다 보면 스스로 버그를 찾게 된다는 개발자들의 오랜 디버깅 기법.
 
