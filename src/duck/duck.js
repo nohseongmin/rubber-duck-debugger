@@ -34,6 +34,8 @@ function applyConfig(c) {
     imgEl.style.display = 'block';
     emojiEl.style.display = 'none';
   }
+
+  scheduleChatter(); // 설정 반영/변경 시 자동 혼잣말 타이머 갱신
 }
 
 window.api.onConfig(applyConfig);
@@ -112,16 +114,36 @@ function showBubble() {
   );
 }
 
-function quack() {
-  const s = (cfg && cfg.sound) || {};
-  const vol = typeof s.volume === 'number' ? s.volume : 0.6;
-  if (s.type === 'file' && s.filePath) playCustomSound(s.filePath, vol);
-  else playSynthQuack(vol);
+function quack(opts) {
+  opts = opts || {};
+  if (!opts.silent) {
+    const s = (cfg && cfg.sound) || {};
+    const vol = typeof s.volume === 'number' ? s.volume : 0.6;
+    if (s.type === 'file' && s.filePath) playCustomSound(s.filePath, vol);
+    else playSynthQuack(vol);
+  }
 
   showBubble();
   duckScaleEl.classList.remove('squish');
   void duckScaleEl.offsetWidth; // 리플로우 강제 → 애니메이션 재시작
   duckScaleEl.classList.add('squish');
+
+  scheduleChatter(); // 상호작용/발화 후 자동 혼잣말 타이머 리셋
+}
+
+// ---- 자동 혼잣말: 가끔 스스로 꽥 ----
+let chatterTimer = null;
+function scheduleChatter() {
+  if (chatterTimer) { clearTimeout(chatterTimer); chatterTimer = null; }
+  const ic = (cfg && cfg.idleChatter) || {};
+  if (!ic.enabled) return;
+  const min = Math.max(5, ic.minSec || 30);
+  const max = Math.max(min, ic.maxSec || 75);
+  const ms = (min + Math.random() * (max - min)) * 1000;
+  chatterTimer = setTimeout(() => {
+    if (moveMode) { scheduleChatter(); return; } // 이동 중엔 건너뜀
+    quack({ silent: !ic.sound }); // quack()이 다시 scheduleChatter() 호출
+  }, ms);
 }
 
 // ---- 상호작용: 좌클릭=꽥 · 우클릭=메뉴 · 이동모드=드래그 ----

@@ -51,6 +51,16 @@
   </section>
 
   <section>
+    <h2>자동 혼잣말 <small>(가끔 스스로 꽥)</small></h2>
+    <label class="checkbox"><input id="chatterEnabled" type="checkbox" checked> 사용</label>
+    <div class="row"><span class="lbl">간격</span>
+      <input id="chatterMin" type="number" min="5" max="600" step="5" value="30"> ~
+      <input id="chatterMax" type="number" min="5" max="600" step="5" value="75">
+      <span class="val">초</span></div>
+    <label class="checkbox"><input id="chatterSound" type="checkbox"> 혼잣말에도 소리 내기</label>
+  </section>
+
+  <section>
     <h2>단축키 <small>(누르면 오리가 꽥)</small></h2>
     <div class="row"><span class="lbl">전역 단축키</span>
       <input id="hotkey" type="text" placeholder="없음" readonly>

@@ -14,6 +14,7 @@ const DEFAULTS = {
     '버그… 방금 찾았지?'
   ],
   sound: { type: 'synth', filePath: null, volume: 0.6 },
+  idleChatter: { enabled: true, minSec: 30, maxSec: 75, sound: false }, // 가끔 스스로 꽥(기본 소리 없음)
   bubbleDuration: 2200,
   alwaysOnTop: true,
   hotkey: 'CommandOrControl+Shift+D', // 전역 단축키(누르면 꽥). null/'' 이면 사용 안 함

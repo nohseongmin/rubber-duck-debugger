@@ -33,6 +33,12 @@ function fill(cfg) {
 
   $('alwaysOnTop').checked = cfg.alwaysOnTop !== false;
 
+  const ic = cfg.idleChatter || {};
+  $('chatterEnabled').checked = ic.enabled !== false;
+  $('chatterMin').value = ic.minSec || 30;
+  $('chatterMax').value = ic.maxSec || 75;
+  $('chatterSound').checked = !!ic.sound;
+
   hotkeyAccel = cfg.hotkey || '';
   $('hotkey').value = accelLabel(hotkeyAccel);
   capturingHotkey = false;
@@ -83,6 +89,12 @@ function collect() {
       volume: parseFloat($('volume').value)
     },
     hotkey: hotkeyAccel || null,
+    idleChatter: {
+      enabled: $('chatterEnabled').checked,
+      minSec: parseInt($('chatterMin').value, 10) || 30,
+      maxSec: parseInt($('chatterMax').value, 10) || 75,
+      sound: $('chatterSound').checked
+    },
     alwaysOnTop: $('alwaysOnTop').checked
   };
 }
