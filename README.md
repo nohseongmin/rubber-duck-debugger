@@ -1,5 +1,7 @@
 # 🦆 Rubber Duck Debugger (러버덕 디버거)
 
+<p align="center"><b>한국어</b> | <a href="README.en.md">English</a></p>
+
 <p align="center">
   <img src="assets/demo.gif" alt="러버덕 디버거 데모 — 오리를 클릭하면 꽥!" width="480">
 </p>
