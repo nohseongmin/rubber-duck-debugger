@@ -28,6 +28,7 @@
 
 - **Lives on your desktop**: transparent, frameless, always-on-top. Only the duck shows — no window box.
 - **Click to quack**: left-click the duck for a synthesized "quack" + a random-phrase speech bubble + a squish animation.
+- **Idle bob**: the duck gently floats up and down even when idle. (Auto-disabled if your OS prefers reduced motion.)
 - **Right-click menu**: right-click the duck → Move / Settings / GitHub / Close.
 - **Move mode**: pick "Move" from the menu and a dashed outline appears — grab and drag to reposition, then `Done` or `Esc` (position auto-saved). Clicking (quack) and moving are separate, so nothing feels ambiguous.
 - **Global hotkey**: press your configured shortcut (default `Ctrl+Shift+D`) to make the duck quack from anywhere, even while another app is focused.
@@ -91,7 +92,7 @@ rubber-duck-debugger/
 
 ## 🗺️ Roadmap
 
-- **v0.2** — idle bob / sprite animation, occasional self-triggered quacks
+- **v0.2** — ✅ idle bob animation · (planned) talking sprite, occasional self-triggered quacks
 - **v0.3** — skin-pack format (zip: image + sound + phrases) import, multiple ducks, keystroke reactions
 - **v1.0** — paid skin/sound packs, auto-update, code signing, Steam release
 

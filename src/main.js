@@ -44,7 +44,8 @@ function createDuckWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      autoplayPolicy: 'no-user-gesture-required'
+      autoplayPolicy: 'no-user-gesture-required',
+      backgroundThrottling: false // 포커스 없어도 대기 부유 애니메이션 계속 재생
     }
   });
 

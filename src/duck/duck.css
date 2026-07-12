@@ -11,7 +11,7 @@ html, body {
 }
 
 /* 이미지/오리 네이티브 드래그(유체이탈 고스트) 방지 */
-#duck, #duck-img, #duck-emoji, #hotzone {
+#duck, #duck-scale, #duck-img, #duck-emoji, #hotzone {
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -40,18 +40,35 @@ html, body {
   line-height: 1;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
   will-change: transform;
+  animation: bob 3.2s ease-in-out infinite; /* 둥실둥실 대기 부유 */
 }
 #duck:active { cursor: grabbing; }
+
+#duck-scale { display: block; }
 
 #duck-emoji { display: block; font-size: 110px; }
 #duck-img { display: none; }
 
-#duck.squish { animation: squish 0.28s ease; }
+/* 대기 부유(위아래). 클릭 스퀴시는 내부 #duck-scale에서 별도로 처리해 충돌 없음 */
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+#duck-scale.squish { animation: squish 0.28s ease; }
 @keyframes squish {
   0%   { transform: scale(1, 1); }
   30%  { transform: scale(1.15, 0.82); }
   60%  { transform: scale(0.92, 1.08); }
   100% { transform: scale(1, 1); }
+}
+
+/* 이동 모드에선 흔들리지 않게 고정 */
+body.move-mode #duck { animation: none; transform: none; }
+
+/* 접근성: 모션 최소화 설정이면 부유 끔 */
+@media (prefers-reduced-motion: reduce) {
+  #duck { animation: none; }
 }
 
 #bubble {

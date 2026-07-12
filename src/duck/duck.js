@@ -8,6 +8,7 @@ let audioCtx = null;
 let bubbleTimer = null;
 
 const duckEl = document.getElementById('duck');
+const duckScaleEl = document.getElementById('duck-scale');
 const imgEl = document.getElementById('duck-img');
 const emojiEl = document.getElementById('duck-emoji');
 const bubbleEl = document.getElementById('bubble');
@@ -118,9 +119,9 @@ function quack() {
   else playSynthQuack(vol);
 
   showBubble();
-  duckEl.classList.remove('squish');
-  void duckEl.offsetWidth; // 리플로우 강제 → 애니메이션 재시작
-  duckEl.classList.add('squish');
+  duckScaleEl.classList.remove('squish');
+  void duckScaleEl.offsetWidth; // 리플로우 강제 → 애니메이션 재시작
+  duckScaleEl.classList.add('squish');
 }
 
 // ---- 상호작용: 좌클릭=꽥 · 우클릭=메뉴 · 이동모드=드래그 ----
