@@ -105,3 +105,44 @@
 2. 무료 스타터 스킨 2~3개 제작(.rduck) — 포맷 검증 겸 마케팅 자산
 3. 여러 마리(공유 스킨)
 4. (선택) 키입력 반응 옵트인 모듈 → 실질 v0.4
+
+---
+
+## 7. 방향 확정 (2026-07-12) — Steam 창작마당 + 할당 핫키
+
+> 사용자 결정으로 아래가 위 3·4절을 **대체**한다.
+
+### 결정 A — 배포/UGC를 **Steam 출시 + 창작마당(Workshop)**으로
+- **로컬 `.rduck` 포맷(1절)은 그대로 유지** — 이게 곧 **Workshop 아이템의 실체**이자 오프라인 임포트 fallback. 즉 1절 작업은 버려지지 않고 Workshop의 토대가 된다.
+- "뭐든 띄울 수 있게" = Workshop 아이템 = 이미지/GIF/APNG + (선택)사운드 + 문구. 사용자가 자유 업로드.
+
+#### Steam Workshop 설계
+- **네이티브 연동**: `steamworks.js`(현행 유지되는 Node 바인딩) 또는 greenworks. Electron 메인 프로세스에서 SteamAPI 초기화.
+- **업로드(창작하기)**: 인앱 "창작마당에 올리기" → `SteamUGC.CreateItem` → 로컬 스킨 폴더를 콘텐츠로 `SetItemContent`+`SetItemPreview`(썸네일)+제목/설명/태그 → `SubmitItemUpdate`. 첫 업로드 시 Steam 약관 동의 페이지 오픈.
+- **다운로드(구독)**: 사용자가 Workshop에서 Subscribe → 앱이 `GetNumSubscribedItems`/`GetSubscribedItems`/`GetItemInstallInfo(경로)`로 설치 폴더를 읽어 스킨 목록에 자동 편입. `.rduck` 검증 로직 그대로 재사용(단, 신뢰 낮음은 동일하니 보안검증 유지).
+- **인앱 브라우즈(선택)**: `SteamUGC.CreateQueryAll`로 인기/최신 아이템 목록 → 앱 내에서 미리보기·구독. (없으면 Steam 오버레이의 Workshop 페이지로 링크)
+
+#### ⚠️ 사용자만 할 수 있는 것 (내가 대행 불가 — 계정생성·결제·심사)
+1. **Steamworks 파트너 계정** 가입(회사/개인 정보, 세금서류)
+2. **Steam Direct 수수료 $100** 결제 → **AppID** 발급
+3. Store 페이지 작성·빌드 업로드(Steampipe)·**출시 심사**(수일)
+4. Workshop 활성화 설정(파트너 페이지에서 UGC 켜기)
+- → **AppID가 나오기 전엔 Workshop 연동을 실제로 테스트할 수 없다.** 그러니 아래 순서로 간다.
+
+#### 조정된 구현 순서
+1. **로컬 스킨/아이템 시스템 먼저**(1절: 포맷·임포트·검증·활성스킨·스킨 UI). Steam 없이도 완결 동작. ← **지금 바로 가능**
+2. 무료 스타터 스킨 2~3개(.rduck) 제작 = 포맷 검증 + 초기 Workshop 시드
+3. 사용자가 **Steamworks 가입 + $100 + AppID** 확보
+4. `steamworks.js` 배선: 구독 아이템 로드 → 업로드 → (선택)인앱 브라우즈
+5. Steam Store 페이지 + 출시
+
+### 결정 B — 키입력 반응 = **할당 가능한 액션 핫키** (네이티브 키로거 폐기)
+- 전역 키보드 후킹(uiohook) **안 씀** → AV오탐·프라이버시·네이티브빌드 리스크 전부 회피.
+- 대신 기존 `globalShortcut` 확장: **기본 OFF**, 사용자가 설정에서 **키 조합을 액션에 할당**.
+- 액션 예: `꽥`, `다음 스킨`, `오리 숨기기/보이기`, `오리 추가`. 여러 개 등록 가능(액션↔키 매핑 목록).
+- config: `hotkeys: [{ accel, action }]`(기존 단일 `hotkey`는 `{accel, action:'quack'}`로 마이그레이션). 설정 UI는 현행 캡처 방식 재사용.
+
+### 수익화 (Steam 모델 = Wallpaper Engine 벤치마크)
+- **앱 자체를 Steam에 저가 유료 판매**(예 $2~4). **Workshop은 무료 UGC** → 콘텐츠가 계속 쌓여 앱을 파는 엔진.
+- GitHub 오픈소스 + 무료 exe는 **성장/신뢰용**으로 유지, Steam 유료판(자동업데이트·Workshop·편의)이 결제 지점. (Wallpaper Engine이 정확히 이 구조로 성공)
+- 프리미엄 공식 스킨팩은 Workshop 무료 흐름과 별개로 선택적.

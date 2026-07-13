@@ -94,8 +94,8 @@ rubber-duck-debugger/
 ## 🗺️ Roadmap
 
 - **v0.2** — ✅ idle bob · ✅ occasional self-chatter · (planned) talking sprite
-- **v0.3** — skin-pack format (zip: image + sound + phrases) import, multiple ducks, keystroke reactions
-- **v1.0** — paid skin/sound packs, auto-update, code signing, Steam release
+- **v0.3** — skin packs (`.rduck`) import/apply/manage, multiple ducks, assignable action hotkeys ([design](docs/DESIGN-v0.3.md))
+- **v1.0** — **Steam release + Workshop (UGC) support**, auto-update, code signing
 
 ## 📄 License
 
