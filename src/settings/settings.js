@@ -190,4 +190,79 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
 }
 
-window.api.getConfig().then(fill);
+// ---- 스킨 ----
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function renderSkins() {
+  const { skins, activeSkin } = await window.api.getSkins();
+  if (current) current.activeSkin = activeSkin; // 저장 시 덮어쓰지 않도록 동기화
+
+  const banner = $('skinBanner');
+  const active = skins.find((s) => s.id === activeSkin);
+  if (active) {
+    banner.textContent = `스킨 "${active.name}" 적용 중 — 아래 캐릭터/소리/문구 설정은 무시됩니다.`;
+    banner.hidden = false;
+  } else {
+    banner.hidden = true;
+  }
+
+  const grid = $('skinGrid');
+  if (!skins.length) {
+    grid.innerHTML = '<div class="skin-empty">설치된 스킨이 없습니다. "스킨팩 가져오기"로 .rduck 파일을 추가하세요.</div>';
+    return;
+  }
+  grid.innerHTML = skins.map((s) => {
+    const src = 'file://' + String(s.imagePath).replace(/\\/g, '/');
+    const cls = s.id === activeSkin ? 'skin-card active' : 'skin-card';
+    return `<div class="${cls}" data-id="${esc(s.id)}" title="${esc(s.name)}">
+      <button class="sdel" data-del="${esc(s.id)}" title="삭제">×</button>
+      <img class="thumb" src="${esc(src)}" alt="">
+      <div class="sname">${esc(s.name)}</div>
+      <div class="sauth">${esc(s.author || '')}</div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.skin-card').forEach((card) => {
+    card.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('sdel')) return; // 삭제 버튼은 별도 처리
+      const id = card.dataset.id;
+      const now = await window.api.setActiveSkin(id);
+      if (current) current.activeSkin = now;
+      await renderSkins();
+      toast('스킨 적용됨 꽥!');
+    });
+  });
+  grid.querySelectorAll('.sdel').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.del;
+      await window.api.deleteSkin(id);
+      await renderSkins();
+      toast('스킨 삭제됨');
+    });
+  });
+}
+
+$('skinImport').addEventListener('click', async () => {
+  const res = await window.api.importSkin();
+  if (res.canceled) return;
+  if (!res.ok) { toast('가져오기 실패: ' + (res.error || '알 수 없음')); return; }
+  await renderSkins();
+  toast(`"${res.name}" 스킨 추가됨 꽥!`);
+});
+
+$('skinNone').addEventListener('click', async () => {
+  const now = await window.api.setActiveSkin(null);
+  if (current) current.activeSkin = now;
+  await renderSkins();
+  toast('직접 설정으로 전환');
+});
+
+window.api.getConfig().then(async (cfg) => {
+  fill(cfg);
+  await renderSkins();
+});

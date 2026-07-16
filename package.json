@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node test/skins.test.js",
     "gen-icons": "node scripts/gen-icons.js",
     "dist": "electron-builder"
   },
@@ -36,5 +37,8 @@
       "target": "AppImage",
       "icon": "assets/icon.png"
     }
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.0"
   }
 }

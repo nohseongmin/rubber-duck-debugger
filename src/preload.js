@@ -7,6 +7,10 @@ contextBridge.exposeInMainWorld('api', {
   saveConfig: (cfg) => ipcRenderer.invoke('save-config', cfg),
   getWindowPos: () => ipcRenderer.invoke('get-window-pos'),
   pickFile: (kind) => ipcRenderer.invoke('pick-file', kind),
+  getSkins: () => ipcRenderer.invoke('get-skins'),
+  importSkin: () => ipcRenderer.invoke('import-skin'),
+  setActiveSkin: (id) => ipcRenderer.invoke('set-active-skin', id),
+  deleteSkin: (id) => ipcRenderer.invoke('delete-skin', id),
 
   // 렌더러 → 메인 (단방향)
   moveWindow: (x, y) => ipcRenderer.send('move-window', x, y),

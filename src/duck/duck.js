@@ -35,11 +35,15 @@ function applyConfig(c) {
     emojiEl.style.display = 'none';
   }
 
+  // 말풍선 색상(스킨이 지정하면 반영, 아니면 기본값)
+  const b = cfg.bubble || {};
+  bubbleEl.style.setProperty('--bubble-bg', b.bgColor || '#ffffff');
+  bubbleEl.style.color = b.textColor || '#222222';
+
   scheduleChatter(); // 설정 반영/변경 시 자동 혼잣말 타이머 갱신
 }
 
-window.api.onConfig(applyConfig);
-window.api.getConfig().then(applyConfig);
+window.api.onConfig(applyConfig); // 메인이 활성 스킨을 반영한 effective config를 내려줌
 window.api.onQuack(() => quack());
 
 // ---- 소리 ----

@@ -2,8 +2,37 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, shell, globalShortcut } = require('electron');
 const path = require('path');
 const config = require('./config');
+const skins = require('./skins');
 
 const REPO_URL = 'https://github.com/nohseongmin/rubber-duck-debugger';
+
+// 원본 설정 위에 활성 스킨을 덮어 렌더러가 이해하는 형태로 반환
+function effectiveConfig(raw) {
+  const cfg = raw || config.load();
+  if (cfg.activeSkin) {
+    const skin = skins.getSkin(cfg.activeSkin);
+    if (skin) {
+      const emoji = (cfg.character && cfg.character.emoji) || '🦆';
+      cfg.character = { type: 'image', imagePath: skin.imagePath, size: skin.size, emoji };
+      if (skin.soundPath) {
+        cfg.sound = { type: 'file', filePath: skin.soundPath, volume: skin.volume != null ? skin.volume : 0.6 };
+      } else {
+        const vol = (cfg.sound && typeof cfg.sound.volume === 'number') ? cfg.sound.volume : 0.6;
+        cfg.sound = { type: 'synth', filePath: null, volume: vol };
+      }
+      if (skin.phrases) cfg.phrases = skin.phrases;
+      cfg.bubble = skin.bubble || null;
+    } else {
+      cfg.activeSkin = null; // 스킨이 사라졌으면 해제
+    }
+  }
+  if (cfg.bubble === undefined) cfg.bubble = null;
+  return cfg;
+}
+
+function sendConfigToDuck() {
+  if (duckWin) duckWin.webContents.send('config', effectiveConfig(config.load()));
+}
 
 let duckWin = null;
 let settingsWin = null;
@@ -55,7 +84,7 @@ function createDuckWindow() {
   duckWin.webContents.on('did-finish-load', () => {
     // 시작은 클릭 투과(마우스가 오리 위로 오면 렌더러가 해제 요청)
     duckWin.setIgnoreMouseEvents(true, { forward: true });
-    duckWin.webContents.send('config', config.load());
+    duckWin.webContents.send('config', effectiveConfig(config.load()));
   });
 
   duckWin.on('closed', () => { duckWin = null; });
@@ -155,11 +184,38 @@ ipcMain.handle('save-config', (_e, cfg) => {
   const merged = config.save(cfg);
   if (duckWin) {
     duckWin.setAlwaysOnTop(merged.alwaysOnTop);
-    duckWin.webContents.send('config', merged);
+    duckWin.webContents.send('config', effectiveConfig(config.load()));
   }
   // 설정창이 열려 있는 동안엔 단축키 캡처를 위해 재등록을 미룸(창 닫힐 때 applyHotkey)
   if (!settingsWin) applyHotkey();
   return merged;
+});
+
+// ---- 스킨 ----
+ipcMain.handle('get-skins', () => ({ skins: skins.listSkins(), activeSkin: config.load().activeSkin }));
+
+ipcMain.handle('import-skin', async () => {
+  const res = await dialog.showOpenDialog(settingsWin || undefined, {
+    properties: ['openFile'],
+    filters: [{ name: '스킨팩', extensions: ['rduck', 'zip'] }]
+  });
+  if (res.canceled || !res.filePaths.length) return { ok: false, canceled: true };
+  return skins.importSkin(res.filePaths[0]);
+});
+
+ipcMain.handle('set-active-skin', (_e, id) => {
+  const c = config.load();
+  c.activeSkin = id || null;
+  const merged = config.save(c);
+  sendConfigToDuck();
+  return merged.activeSkin;
+});
+
+ipcMain.handle('delete-skin', (_e, id) => {
+  const ok = skins.deleteSkin(id);
+  const c = config.load();
+  if (c.activeSkin === id) { c.activeSkin = null; config.save(c); sendConfigToDuck(); }
+  return ok;
 });
 
 ipcMain.handle('get-window-pos', () => (duckWin ? duckWin.getPosition() : [0, 0]));

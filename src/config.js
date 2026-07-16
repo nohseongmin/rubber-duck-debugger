@@ -18,6 +18,7 @@ const DEFAULTS = {
   bubbleDuration: 2200,
   alwaysOnTop: true,
   hotkey: 'CommandOrControl+Shift+D', // 전역 단축키(누르면 꽥). null/'' 이면 사용 안 함
+  activeSkin: null, // 적용 중인 스킨 id (null = 직접 설정)
   position: null // {x, y} 또는 null(=우하단 기본 위치)
 };
 

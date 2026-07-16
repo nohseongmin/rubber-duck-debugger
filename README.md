@@ -30,6 +30,7 @@
 - **클릭하면 꽥**: 오리를 좌클릭하면 합성된 "꽥" 소리 + 랜덤 문구 말풍선 + 스퀴시 애니메이션.
 - **둥실둥실 대기 애니메이션**: 가만히 둬도 오리가 살짝 떠서 부유한다. (OS 모션 최소화 설정 시 자동으로 꺼짐)
 - **자동 혼잣말**: 가끔 오리가 스스로 말풍선을 띄운다. 간격·소리 여부는 설정에서 조절(기본은 소리 없이 말풍선만).
+- **스킨팩(`.rduck`)**: 캐릭터(이미지/GIF/WebP)·소리·문구·말풍선 색을 한 파일로 묶어 **가져오기 → 전환 → 삭제**. 샘플: [`skins/pinky-duck.rduck`](skins/pinky-duck.rduck) → 설정 → 스킨 → "스킨팩 가져오기".
 - **우클릭 메뉴**: 오리를 우클릭 → 위치 이동 / 설정 / GitHub / 닫기.
 - **위치 이동 모드**: 메뉴에서 "위치 이동"을 켜면 점선 경계가 나타나고 잡아끌어 옮긴다. `완료` 또는 `Esc`로 종료(위치 자동 저장). 좌클릭=꽥과 이동이 분리돼 헷갈리지 않는다.
 - **전역 단축키**: 설정에서 지정한 단축키(기본 `Ctrl+Shift+D`)를 누르면 다른 창을 쓰는 중에도 오리가 꽥 한다.
@@ -60,6 +61,35 @@ npm run dist
 ```
 
 `electron-builder`로 Windows(nsis) / macOS(dmg) / Linux(AppImage) 설치파일을 만든다. (`dist/`에 출력)
+
+## 🎨 스킨팩 만들기 (`.rduck`)
+
+`skin.json` + 애셋을 zip으로 묶고 확장자를 `.rduck`로 바꾸면 끝. (설정 → 스킨 → 가져오기)
+
+```
+my-skin.rduck (zip)
+├─ skin.json
+├─ char.webp     # 이미지/GIF/APNG/WebP 모두 가능(애니메이션 OK)
+└─ quack.mp3     # 선택(없으면 합성 꽥 사용)
+```
+
+```json
+{
+  "formatVersion": 1,
+  "id": "my-skin",
+  "name": "내 스킨",
+  "author": "닉네임",
+  "version": "1.0.0",
+  "character": { "image": "char.webp", "size": 130 },
+  "sound":     { "file": "quack.mp3", "volume": 0.6 },
+  "phrases":   ["삑!", "그 코드 다시 읽어봐"],
+  "bubble":    { "textColor": "#5a1040", "bgColor": "#ffe3f1" }
+}
+```
+
+> **보안**: 스킨은 **순수 애셋**입니다. 코드 실행 없음. 가져올 때 경로 탈출(zip slip)·실행파일·용량 폭탄·매니페스트 위조를 검사하고 허용된 이미지/오디오만 추출합니다. ([테스트](test/skins.test.js) · [설계](docs/DESIGN-v0.3.md))
+>
+> 로드맵: v1.0에서 **Steam 창작마당(Workshop)** 으로 스킨을 올리고 받을 수 있게 됩니다.
 
 ## 🧩 기술 스택
 

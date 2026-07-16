@@ -76,7 +76,7 @@ body.move-mode #duck { animation: none; transform: none; }
   margin-bottom: 10px;
   padding: 10px 14px;
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--bubble-bg, #ffffff);
   color: #222;
   font-size: 16px;
   font-weight: 700;
@@ -98,7 +98,7 @@ body.move-mode #duck { animation: none; transform: none; }
   left: 50%;
   transform: translateX(-50%);
   border: 8px solid transparent;
-  border-top-color: #ffffff;
+  border-top-color: var(--bubble-bg, #ffffff);
   border-bottom: 0;
 }
 #bubble.show { opacity: 1; transform: translateY(0) scale(1); }

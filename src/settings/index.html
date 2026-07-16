@@ -11,6 +11,17 @@
   <h1>🦆 러버덕 디버거 설정</h1>
 
   <section>
+    <h2>스킨 <small>(.rduck 스킨팩 · 적용 시 아래 캐릭터/소리/문구를 대신함)</small></h2>
+    <div id="skinBanner" class="skin-banner" hidden></div>
+    <div id="skinGrid" class="skin-grid"></div>
+    <div class="actions" style="justify-content: space-between; margin-top: 10px;">
+      <button id="skinImport" type="button">스킨팩 가져오기…</button>
+      <button id="skinNone" type="button">직접 설정으로</button>
+    </div>
+    <small class="hint">스킨팩은 이미지/GIF·소리·문구를 담은 .rduck(zip) 파일입니다. 나중에 Steam 창작마당에서 받을 수 있게 됩니다.</small>
+  </section>
+
+  <section>
     <h2>캐릭터</h2>
     <div class="radios">
       <label><input type="radio" name="charType" value="default" checked> 기본 오리</label>
