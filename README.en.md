@@ -34,7 +34,7 @@
 - **Skin packs (`.rduck`)**: bundle a character (image/GIF/WebP), sound, phrases and bubble colors into one file — **import → switch → delete**. Sample: [`skins/pinky-duck.rduck`](skins/pinky-duck.rduck) → Settings → Skin → "Import".
 - **Right-click menu**: right-click the duck → Move / Settings / GitHub / Close.
 - **Move mode**: pick "Move" from the menu and a dashed outline appears — grab and drag to reposition, then `Done` or `Esc` (position auto-saved). Clicking (quack) and moving are separate, so nothing feels ambiguous.
-- **Global hotkey**: press your configured shortcut (default `Ctrl+Shift+D`) to make the duck quack from anywhere, even while another app is focused.
+- **Global hotkeys (assignable actions)**: map key combos to actions (**quack / next skin / hide-show / open settings**). Add as many as you like; they work even while another app is focused. (default `Ctrl+Shift+D` = quack)
 - **Click-through**: everywhere except the duck is click-through, so your desktop icons stay usable.
 - **Fully customizable**: character (built-in duck / emoji / your own image or **GIF** / size), speech phrases, sound (synthesized quack or your own file / volume), and bubble duration — all in the settings window.
 - **Tray app**: the tray menu offers Test quack / Settings / Open GitHub / Quit.
@@ -123,7 +123,7 @@ rubber-duck-debugger/
 ## 🗺️ Roadmap
 
 - **v0.2** — ✅ idle bob · ✅ occasional self-chatter · (planned) talking sprite
-- **v0.3** — skin packs (`.rduck`) import/apply/manage, multiple ducks, assignable action hotkeys ([design](docs/DESIGN-v0.3.md))
+- **v0.3** — ✅ skin packs (`.rduck`) import/apply/manage · ✅ assignable action hotkeys · (next) multiple ducks ([design](docs/DESIGN-v0.3.md))
 - **v1.0** — **Steam release + Workshop (UGC) support**, auto-update, code signing
 
 ## 📄 License

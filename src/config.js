@@ -17,7 +17,8 @@ const DEFAULTS = {
   idleChatter: { enabled: true, minSec: 30, maxSec: 75, sound: false }, // 가끔 스스로 꽥(기본 소리 없음)
   bubbleDuration: 2200,
   alwaysOnTop: true,
-  hotkey: 'CommandOrControl+Shift+D', // 전역 단축키(누르면 꽥). null/'' 이면 사용 안 함
+  // 전역 단축키: 키 조합 ↔ 액션(quack/next-skin/toggle-hide/open-settings)
+  hotkeys: [{ accel: 'CommandOrControl+Shift+D', action: 'quack' }],
   activeSkin: null, // 적용 중인 스킨 id (null = 직접 설정)
   position: null // {x, y} 또는 null(=우하단 기본 위치)
 };
@@ -50,10 +51,20 @@ function clone(v) {
   return JSON.parse(JSON.stringify(v));
 }
 
+// 구버전 마이그레이션(단일 hotkey 문자열 → hotkeys 배열)
+function migrate(p) {
+  if (!p || typeof p !== 'object') return p;
+  if (!Array.isArray(p.hotkeys) && typeof p.hotkey === 'string') {
+    p.hotkeys = p.hotkey ? [{ accel: p.hotkey, action: 'quack' }] : [];
+  }
+  if ('hotkey' in p) delete p.hotkey;
+  return p;
+}
+
 function load() {
   try {
-    const raw = fs.readFileSync(configPath(), 'utf-8');
-    return deepMerge(DEFAULTS, JSON.parse(raw));
+    const parsed = migrate(JSON.parse(fs.readFileSync(configPath(), 'utf-8')));
+    return deepMerge(DEFAULTS, parsed);
   } catch (e) {
     return clone(DEFAULTS);
   }

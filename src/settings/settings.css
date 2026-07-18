@@ -77,7 +77,15 @@ button.primary:hover { background: #ffc400; }
   border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; cursor: pointer;
 }
 .skin-empty { grid-column: 1 / -1; color: #aaa; font-size: 13px; text-align: center; padding: 16px 0; }
-#hotkey.capturing { border-color: #ffb300; background: #fff8e1; color: #a06800; font-weight: 700; }
+.hotkey-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.hotkey-row select { padding: 6px 8px; border: 1px solid #d4d7dd; border-radius: 8px; font-size: 13px; background: #fff; }
+.hotkey-row .hk-key {
+  flex: 1; padding: 6px 10px; border: 1px solid #d4d7dd; border-radius: 8px;
+  font-size: 13px; background: #f0f1f4; color: #555; text-align: center;
+}
+.hotkey-row .hk-key.capturing { border-color: #ffb300; background: #fff8e1; color: #a06800; font-weight: 700; }
+.hotkey-row .hk-del { padding: 6px 10px; }
+#hotkeyAdd { margin-top: 4px; }
 
 .preview {
   margin-top: 12px;

@@ -108,7 +108,7 @@ function openSettings() {
   });
   settingsWin.setMenuBarVisibility(false);
   settingsWin.loadFile(path.join(__dirname, 'settings', 'index.html'));
-  settingsWin.on('closed', () => { settingsWin = null; applyHotkey(); });
+  settingsWin.on('closed', () => { settingsWin = null; applyHotkeys(); });
 }
 
 function trayImage() {
@@ -164,16 +164,50 @@ function popupDuckMenu() {
   menu.popup({ window: duckWin });
 }
 
-// 전역 단축키 등록(설정값 기준). 누르면 클릭과 동일하게 꽥.
-function applyHotkey() {
+// 설치된 스킨을 순환(직접 설정 → 스킨1 → 스킨2 → …)
+function cycleSkin() {
+  const ids = [null, ...skins.listSkins().map((s) => s.id)];
+  if (ids.length <= 1) return;
+  const cur = config.load().activeSkin;
+  const idx = Math.max(0, ids.indexOf(cur));
+  const c = config.load();
+  c.activeSkin = ids[(idx + 1) % ids.length];
+  config.save(c);
+  sendConfigToDuck();
+}
+
+let duckHidden = false;
+function toggleHide() {
+  if (!duckWin) return;
+  duckHidden = !duckHidden;
+  if (duckHidden) duckWin.hide();
+  else duckWin.show();
+}
+
+function actionFn(action) {
+  switch (action) {
+    case 'quack': return quackNow;
+    case 'next-skin': return cycleSkin;
+    case 'toggle-hide': return toggleHide;
+    case 'open-settings': return openSettings;
+    default: return null;
+  }
+}
+
+// 전역 단축키 등록(설정의 hotkeys 배열 기준: 키 조합 ↔ 액션)
+function applyHotkeys() {
   globalShortcut.unregisterAll();
-  const accel = config.load().hotkey;
-  if (!accel) return;
-  try {
-    const ok = globalShortcut.register(accel, quackNow);
-    if (!ok) console.warn('전역 단축키 등록 실패(충돌 가능):', accel);
-  } catch (e) {
-    console.warn('전역 단축키 오류:', accel, e.message);
+  const list = config.load().hotkeys || [];
+  for (const h of list) {
+    if (!h || !h.accel) continue;
+    const fn = actionFn(h.action);
+    if (!fn) continue;
+    try {
+      const ok = globalShortcut.register(h.accel, fn);
+      if (!ok) console.warn('전역 단축키 등록 실패(충돌 가능):', h.accel);
+    } catch (e) {
+      console.warn('전역 단축키 오류:', h.accel, e.message);
+    }
   }
 }
 
@@ -186,8 +220,8 @@ ipcMain.handle('save-config', (_e, cfg) => {
     duckWin.setAlwaysOnTop(merged.alwaysOnTop);
     duckWin.webContents.send('config', effectiveConfig(config.load()));
   }
-  // 설정창이 열려 있는 동안엔 단축키 캡처를 위해 재등록을 미룸(창 닫힐 때 applyHotkey)
-  if (!settingsWin) applyHotkey();
+  // 설정창이 열려 있는 동안엔 단축키 캡처를 위해 재등록을 미룸(창 닫힐 때 applyHotkeys)
+  if (!settingsWin) applyHotkeys();
   return merged;
 });
 
@@ -264,7 +298,7 @@ if (!gotLock) {
   app.whenReady().then(() => {
     createDuckWindow();
     buildTray();
-    applyHotkey();
+    applyHotkeys();
     app.on('activate', () => { if (!duckWin) createDuckWindow(); });
   });
 

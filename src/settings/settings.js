@@ -2,8 +2,15 @@
 
 const $ = (id) => document.getElementById(id);
 let current = null;
-let hotkeyAccel = '';       // 저장용 Electron accelerator 문자열
-let capturingHotkey = false;
+let hotkeys = [];           // [{ accel, action }]
+let capturingRow = -1;      // 키 캡처 중인 행 index (-1 = 없음)
+
+const HK_ACTIONS = [
+  { v: 'quack', label: '꽥' },
+  { v: 'next-skin', label: '다음 스킨' },
+  { v: 'toggle-hide', label: '숨기기/보이기' },
+  { v: 'open-settings', label: '설정 열기' }
+];
 
 // 표시용: 'CommandOrControl' → 'Ctrl'
 function accelLabel(accel) {
@@ -39,10 +46,11 @@ function fill(cfg) {
   $('chatterMax').value = ic.maxSec || 75;
   $('chatterSound').checked = !!ic.sound;
 
-  hotkeyAccel = cfg.hotkey || '';
-  $('hotkey').value = accelLabel(hotkeyAccel);
-  capturingHotkey = false;
-  $('hotkey').classList.remove('capturing');
+  hotkeys = (Array.isArray(cfg.hotkeys) ? cfg.hotkeys : [])
+    .filter((h) => h && h.accel)
+    .map((h) => ({ accel: h.accel, action: h.action || 'quack' }));
+  capturingRow = -1;
+  renderHotkeys();
 
   renderPreview();
 }
@@ -88,7 +96,7 @@ function collect() {
       filePath: $('soundPath').value || null,
       volume: parseFloat($('volume').value)
     },
-    hotkey: hotkeyAccel || null,
+    hotkeys: hotkeys.filter((h) => h.accel),
     idleChatter: {
       enabled: $('chatterEnabled').checked,
       minSec: parseInt($('chatterMin').value, 10) || 30,
@@ -99,7 +107,7 @@ function collect() {
   };
 }
 
-// ---- 단축키 캡처 ----
+// ---- 단축키 리스트(키 ↔ 액션) ----
 function keyName(e) {
   const k = e.key;
   if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(k)) return null;
@@ -113,33 +121,56 @@ function keyName(e) {
   return null;
 }
 
-function endCapture(accel) {
-  capturingHotkey = false;
-  hotkeyAccel = accel;
-  $('hotkey').classList.remove('capturing');
-  $('hotkey').value = accelLabel(accel);
+function renderHotkeys() {
+  const list = $('hotkeyList');
+  const opts = HK_ACTIONS.map((a) => `<option value="${a.v}">${a.label}</option>`).join('');
+  list.innerHTML = hotkeys.map((h, i) => {
+    const keyText = capturingRow === i ? '키 조합을 누르세요…' : (accelLabel(h.accel) || '미지정');
+    const cls = capturingRow === i ? 'hk-key capturing' : 'hk-key';
+    return `<div class="hotkey-row" data-i="${i}">
+      <select class="hk-action">${opts}</select>
+      <div class="${cls}" title="클릭해서 키 지정">${keyText}</div>
+      <button class="hk-del" type="button" title="삭제">×</button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.hotkey-row').forEach((row) => {
+    const i = parseInt(row.dataset.i, 10);
+    row.querySelector('.hk-action').value = hotkeys[i].action;
+    row.querySelector('.hk-action').addEventListener('change', (e) => { hotkeys[i].action = e.target.value; });
+    row.querySelector('.hk-key').addEventListener('click', () => {
+      capturingRow = capturingRow === i ? -1 : i;
+      renderHotkeys();
+    });
+    row.querySelector('.hk-del').addEventListener('click', () => {
+      hotkeys.splice(i, 1);
+      if (capturingRow === i) capturingRow = -1;
+      renderHotkeys();
+    });
+  });
 }
 
-$('hotkeySet').addEventListener('click', () => {
-  capturingHotkey = true;
-  $('hotkey').classList.add('capturing');
-  $('hotkey').value = '키 조합을 누르세요…';
+$('hotkeyAdd').addEventListener('click', () => {
+  hotkeys.push({ accel: '', action: 'quack' });
+  capturingRow = hotkeys.length - 1; // 새 행 바로 캡처 대기
+  renderHotkeys();
 });
-$('hotkeyClear').addEventListener('click', () => endCapture(''));
 
 window.addEventListener('keydown', (e) => {
-  if (!capturingHotkey) return;
+  if (capturingRow < 0) return;
   e.preventDefault();
   e.stopPropagation();
-  if (e.key === 'Escape') { endCapture(hotkeyAccel); return; } // 취소: 이전 값 유지
+  if (e.key === 'Escape') { capturingRow = -1; renderHotkeys(); return; }
   const mods = [];
   if (e.ctrlKey || e.metaKey) mods.push('CommandOrControl');
   if (e.altKey) mods.push('Alt');
   if (e.shiftKey) mods.push('Shift');
   const name = keyName(e);
-  if (!name) return;                                   // 아직 수식키만 눌림 → 대기
+  if (!name) return;                                   // 수식키만 → 대기
   if (mods.length === 0 && name.length === 1) return;  // 단일 문자키는 수식키 필요
-  endCapture([...mods, name].join('+'));
+  if (hotkeys[capturingRow]) hotkeys[capturingRow].accel = [...mods, name].join('+');
+  capturingRow = -1;
+  renderHotkeys();
 }, true);
 
 // ---- 라이브 프리뷰 갱신 ----
