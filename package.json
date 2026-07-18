@@ -18,6 +18,7 @@
   "build": {
     "appId": "com.rubberduck.debugger",
     "productName": "RubberDuckDebugger",
+    "artifactName": "${productName}-Setup.${ext}",
     "files": [
       "src/**/*",
       "assets/**/*"

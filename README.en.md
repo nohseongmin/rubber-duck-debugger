@@ -19,7 +19,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup-0.2.0.exe"><b>⬇️ Download installer (Windows)</b></a>
+  <a href="https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe"><b>⬇️ Download installer (Windows) — click</b></a><br>
+  <sub>Download → run → done. No npm required.</sub>
 </p>
 
 > Rubber duck debugging: a classic developer technique — explaining your stuck code line by line to a rubber duck until you spot the bug yourself.
@@ -40,27 +41,25 @@
 
 > A default character (transparent rubber-duck image) is bundled, and the default "quack" is synthesized in real time with the Web Audio API (no audio file shipped). Swap in your own image / GIF / emoji / sound from Settings. Asset details in [CREDITS.md](CREDITS.md).
 
-## 🚀 Run from source
+## 📥 Install (regular users)
+
+**No npm, no build steps — just grab the installer.**
+
+1. Download **[⬇️ the installer](https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe)** and run it
+2. If Windows SmartScreen shows "unknown publisher / protected your PC" → **More info → Run anyway** (expected, since it isn't code-signed)
+3. The duck appears at the bottom-right. **Left-click → quack!** · settings/quit via **right-click** on the duck or the tray icon
+
+> Grab new versions from [Releases](https://github.com/nohseongmin/rubber-duck-debugger/releases). (Auto-update is on the roadmap.)
+
+## 🛠 For developers — run/build from source
 
 ```bash
-# 1) Install dependencies
 npm install
-
-# 2) Start
-npm start
+npm start        # dev run
+npm test         # skin-import security tests
+npm run dist     # build installers → dist/ (Windows nsis / macOS dmg / Linux AppImage)
+npm run gen-icons  # regenerate placeholder icons (optional)
 ```
-
-The duck appears at the bottom-right of your screen. Click it → quack! Open settings from the tray icon → "Settings…".
-
-> Icons (`assets/icon.png`, `assets/tray.png`) are included in the repo. To regenerate them, run `npm run gen-icons` (pure Node, placeholder icons).
-
-### Build an installer
-
-```bash
-npm run dist
-```
-
-`electron-builder` produces installers for Windows (nsis) / macOS (dmg) / Linux (AppImage), output to `dist/`.
 
 ## 🎨 Making a skin pack (`.rduck`)
 

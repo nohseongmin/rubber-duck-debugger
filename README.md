@@ -19,7 +19,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup-0.2.0.exe"><b>⬇️ 설치파일 다운로드 (Windows)</b></a>
+  <a href="https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe"><b>⬇️ 설치파일 다운로드 (Windows) — 클릭</b></a><br>
+  <sub>다운로드 → 실행 → 끝. npm 필요 없음.</sub>
 </p>
 
 > 러버덕 디버깅(Rubber Duck Debugging): 막힌 코드를 고무오리에게 한 줄씩 소리 내어 설명하다 보면 스스로 버그를 찾게 된다는 개발자들의 오랜 디버깅 기법.
@@ -40,27 +41,25 @@
 
 > 기본 캐릭터(투명 배경 고무오리 이미지)가 내장돼 있고, 기본 "꽥" 소리는 Web Audio로 실시간 합성한다(포함 오디오 파일 없음). 설정에서 원하는 이미지·GIF·이모지·사운드로 바꿀 수 있다. 애셋 출처는 [CREDITS.md](CREDITS.md).
 
-## 🚀 실행 방법
+## 📥 설치 (일반 사용자)
+
+**npm 같은 거 필요 없습니다. 설치파일만 받으면 끝.**
+
+1. **[⬇️ 설치파일 다운로드](https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe)** 를 받아 실행
+2. "알 수 없는 게시자 / Windows에서 PC를 보호했습니다(SmartScreen)" 경고가 뜨면 → **추가 정보 → 실행** (코드사이닝 미적용이라 뜨는 정상 경고입니다)
+3. 화면 우하단에 오리가 나타납니다. **좌클릭 → 꽥!** · 설정/종료는 오리 **우클릭** 또는 트레이 아이콘
+
+> 새 버전은 [릴리즈](https://github.com/nohseongmin/rubber-duck-debugger/releases)에서 다시 받으면 됩니다. (자동 업데이트는 로드맵)
+
+## 🛠 개발자용 — 소스에서 실행/빌드
 
 ```bash
-# 1) 의존성 설치
 npm install
-
-# 2) 실행
-npm start
+npm start        # 개발 실행
+npm test         # 스킨 임포트 보안 테스트
+npm run dist     # 설치파일 빌드 → dist/ (Windows nsis / macOS dmg / Linux AppImage)
+npm run gen-icons  # placeholder 아이콘 재생성(선택)
 ```
-
-실행하면 화면 우하단에 오리가 나타난다. 클릭 → 꽥! 설정은 트레이 아이콘 → "설정…".
-
-> 아이콘(`assets/icon.png`, `assets/tray.png`)은 저장소에 포함돼 있다. 다시 만들려면 `npm run gen-icons`(순수 Node로 placeholder 아이콘 재생성).
-
-### 배포용 설치파일 빌드
-
-```bash
-npm run dist
-```
-
-`electron-builder`로 Windows(nsis) / macOS(dmg) / Linux(AppImage) 설치파일을 만든다. (`dist/`에 출력)
 
 ## 🎨 스킨팩 만들기 (`.rduck`)
 
