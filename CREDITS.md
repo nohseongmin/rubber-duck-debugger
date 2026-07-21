@@ -1,21 +1,21 @@
-# Credits / 서드파티 애셋 출처
+# Credits
 
-이 프로젝트에 포함된 애셋과 출처입니다. 현재 서드파티 저작자 표기가 필요한 애셋은 없습니다(사운드는 코드로 합성, 캐릭터는 프로젝트 소유 이미지).
+Where the bundled assets come from. Nothing here currently requires third-party attribution: the quack is generated in code, and the artwork belongs to the project.
 
-## 사운드
+## Sound
 
-- 기본 "꽥"은 Web Audio API로 **실시간 합성**합니다(포함된 오디오 파일 없음). 설정에서 사용자가 자신의 사운드 파일을 지정할 수 있습니다.
+The default quack is synthesized at runtime with the Web Audio API, so no audio file ships with the app. You can point the settings at your own sound file instead.
 
-## 캐릭터 이미지
+## Artwork
 
-- **`assets/duck.png`** — 프로젝트 소유자가 생성한 고무오리 이미지(AI 이미지 생성 도구 사용). 생성자가 저작권/상업이용 권리를 보유. 투명 배경.
-- **`assets/icon.png`, `assets/tray.png`** — 위 `duck.png`를 리사이즈해 만든 앱/트레이 아이콘.
-- 대안: `scripts/gen-icons.js`(순수 Node)로 placeholder 아이콘을 재생성할 수 있습니다.
+- `assets/duck.png` — the rubber duck character, made by the project owner with an AI image tool. Transparent background; the owner holds the rights, including commercial use.
+- `assets/icon.png`, `assets/tray.png` — the app and tray icons, resized from `duck.png`.
+- `scripts/gen-icons.js` can regenerate simple placeholder icons in pure Node if you'd rather not use the artwork.
 
-## 이모지
+## Emoji
 
-- 설정에서 캐릭터를 이모지로 바꾸면 유니코드 이모지(🦆 등)를 렌더링하며, 별도 이미지 애셋을 포함하지 않습니다.
+Setting the character to an emoji renders a Unicode glyph with the system font. No image is bundled for that.
 
 ---
 
-> 교체 시 참고: 완전 무표기(퍼블릭도메인/CC0) 사운드로 바꾸려면 [Freesound.org](https://freesound.org/) 의 CC0 필터, [Pixabay](https://pixabay.com/sound-effects/) 등을 사용할 수 있습니다. 다만 오픈소스 저장소에 파일을 그대로 포함(재배포)하려면 재배포를 명시적으로 허용하는 CC0/CC-BY 계열이 안전합니다.
+If you swap in a different sound and want to redistribute it with the repo, prefer CC0 or CC-BY material — [Freesound](https://freesound.org/) (filtered to CC0) and [Pixabay](https://pixabay.com/sound-effects/) are reasonable starting points. Licenses that forbid redistributing the file on its own don't work for an open repository, even when they allow commercial use.
