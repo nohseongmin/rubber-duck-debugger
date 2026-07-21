@@ -6,7 +6,6 @@
   "scripts": {
     "start": "electron .",
     "test": "node test/skins.test.js",
-    "gen-icons": "node scripts/gen-icons.js",
     "dist": "electron-builder"
   },
   "author": "",

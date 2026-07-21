@@ -58,7 +58,6 @@ npm install
 npm start        # 개발 실행
 npm test         # 스킨 임포트 보안 테스트
 npm run dist     # 설치파일 빌드 → dist/ (Windows nsis / macOS dmg / Linux AppImage)
-npm run gen-icons  # placeholder 아이콘 재생성(선택)
 ```
 
 ## 🎨 스킨팩 만들기 (`.rduck`)
@@ -95,7 +94,6 @@ my-skin.rduck (zip)
 - **Electron** — 메인 프로세스(Node) + 렌더러(HTML/CSS/JS)
 - **Web Audio API** — 의존성 없이 실시간 "꽥" 합성
 - **자체 JSON 설정 저장** — `userData/config.json` (외부 스토어 의존성 없음)
-- **순수 Node PNG 생성기** — `scripts/gen-icons.js` (바이너리 애셋 미커밋)
 - **electron-builder** — 크로스플랫폼 패키징
 
 ## 📁 프로젝트 구조
@@ -109,8 +107,6 @@ rubber-duck-debugger/
 │  ├─ skins.js         # 스킨팩(.rduck) 파싱·검증·설치
 │  ├─ duck/            # 오리 위젯 (투명창): index.html, duck.css, duck.js
 │  └─ settings/        # 설정창: index.html, settings.css, settings.js
-├─ scripts/
-│  └─ gen-icons.js     # 아이콘 PNG 생성기
 ├─ test/               # 스킨 임포트 보안 테스트
 ├─ assets/             # 오리 이미지, 아이콘, 데모 GIF
 ├─ BLUEPRINT.md        # 기획/시장성/BM/보안/로드맵

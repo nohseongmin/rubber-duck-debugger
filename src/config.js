@@ -80,4 +80,4 @@ function save(cfg) {
   return merged;
 }
 
-module.exports = { DEFAULTS, load, save, configPath };
+module.exports = { DEFAULTS, load, save };

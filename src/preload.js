@@ -20,7 +20,6 @@ contextBridge.exposeInMainWorld('api', {
   testQuack: () => ipcRenderer.send('test-quack'),
   showDuckMenu: () => ipcRenderer.send('show-duck-menu'),
   exitMoveMode: () => ipcRenderer.send('exit-move-mode'),
-  quit: () => ipcRenderer.send('quit'),
 
   // 메인 → 렌더러 (구독)
   onConfig: (cb) => ipcRenderer.on('config', (_e, cfg) => cb(cfg)),
