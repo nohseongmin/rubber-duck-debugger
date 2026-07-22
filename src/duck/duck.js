@@ -72,6 +72,8 @@ function applyConfig(c) {
     emojiEl.style.display = 'none';
   }
 
+  document.body.classList.toggle('no-bob', cfg.idleBob === false);
+
   const bubble = cfg.bubble || {};
   bubbleEl.style.setProperty('--bubble-bg', bubble.bgColor || FALLBACK.bubbleBg);
   bubbleEl.style.color = bubble.textColor || FALLBACK.bubbleText;

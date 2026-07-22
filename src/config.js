@@ -15,10 +15,13 @@ const DEFAULTS = {
   ],
   sound: { type: 'synth', filePath: null, volume: 0.6 },
   idleChatter: { enabled: true, minSec: 30, maxSec: 75, sound: false }, // 가끔 스스로 꽥(기본 소리 없음)
+  idleBob: true,        // 대기 중 둥실둥실 부유
   bubbleDuration: 2200,
   alwaysOnTop: true,
-  // 전역 단축키: 키 조합 ↔ 액션(quack/next-skin/toggle-hide/open-settings)
-  hotkeys: [{ accel: 'CommandOrControl+Shift+D', action: 'quack' }],
+  launchAtLogin: false, // PC 시작 시 자동 실행(기본 꺼짐)
+  // 전역 단축키: 키 조합 ↔ 액션(quack/next-skin/toggle-hide/open-settings).
+  // 기본은 없음 — 다른 프로그램 단축키를 뺏지 않도록 사용자가 직접 추가한다.
+  hotkeys: [],
   activeSkin: null, // 적용 중인 스킨 id (null = 직접 설정)
   position: null // {x, y} 또는 null(=우하단 기본 위치)
 };

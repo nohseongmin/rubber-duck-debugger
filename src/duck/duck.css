@@ -66,6 +66,9 @@ html, body {
 /* 이동 모드에선 흔들리지 않게 고정 */
 body.move-mode #duck { animation: none; transform: none; }
 
+/* 설정에서 대기 부유를 끈 경우 */
+body.no-bob #duck { animation: none; }
+
 /* 접근성: 모션 최소화 설정이면 부유 끔 */
 @media (prefers-reduced-motion: reduce) {
   #duck { animation: none; }

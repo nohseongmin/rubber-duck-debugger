@@ -83,6 +83,8 @@ function fill(cfg) {
   $('volVal').textContent = Math.round(volume * 100) + '%';
 
   $('alwaysOnTop').checked = cfg.alwaysOnTop !== false;
+  $('idleBob').checked = cfg.idleBob !== false;
+  $('launchAtLogin').checked = !!cfg.launchAtLogin;
 
   const idle = cfg.idleChatter || {};
   $('chatterEnabled').checked = idle.enabled !== false;
@@ -123,7 +125,9 @@ function collect() {
       maxSec: parseInt($('chatterMax').value, 10) || FALLBACK.chatterMaxSec,
       sound: $('chatterSound').checked
     },
-    alwaysOnTop: $('alwaysOnTop').checked
+    alwaysOnTop: $('alwaysOnTop').checked,
+    idleBob: $('idleBob').checked,
+    launchAtLogin: $('launchAtLogin').checked
   };
 }
 

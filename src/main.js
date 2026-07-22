@@ -63,6 +63,21 @@ function sendConfigToDuck() {
   if (duckWin) duckWin.webContents.send('config', effectiveConfig());
 }
 
+// PC 시작 시 자동 실행. OS 쪽이 실제 상태이므로 시작할 때 설정을 OS 기준으로 맞춘다
+// (사용자가 Windows 시작프로그램에서 직접 끈 경우 체크박스가 거짓말하지 않도록).
+function applyLaunchAtLogin(enabled) {
+  app.setLoginItemSettings({ openAtLogin: !!enabled });
+}
+
+function syncLaunchAtLogin() {
+  const cfg = config.load();
+  const actual = app.getLoginItemSettings().openAtLogin;
+  if (cfg.launchAtLogin !== actual) {
+    cfg.launchAtLogin = actual;
+    config.save(cfg);
+  }
+}
+
 function setActiveSkin(id) {
   const cfg = config.load();
   cfg.activeSkin = id || null;
@@ -236,6 +251,7 @@ ipcMain.handle('get-config', () => config.load());
 
 ipcMain.handle('save-config', (_e, cfg) => {
   const saved = config.save(cfg);
+  applyLaunchAtLogin(saved.launchAtLogin);
   if (duckWin) {
     duckWin.setAlwaysOnTop(saved.alwaysOnTop);
     sendConfigToDuck();
@@ -291,6 +307,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    syncLaunchAtLogin();
     createDuckWindow();
     buildTray();
     applyHotkeys();

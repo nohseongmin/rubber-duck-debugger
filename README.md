@@ -33,9 +33,9 @@ Everything except the duck is click-through, so your desktop icons and windows s
 
 Moving it is a separate mode on purpose. Right-click, pick Move, and a dashed outline appears; drag the duck wherever you want and press Done or Esc. That way clicking to quack and dragging to reposition never fight each other, which was the most annoying thing about the first version.
 
-You can bind global hotkeys to whatever you like — quack, cycle to the next skin, hide or show the duck, open settings. They work while another app has focus.
+You can bind global hotkeys to whatever you like — quack, cycle to the next skin, hide or show the duck, open settings. They work while another app has focus. Nothing is bound out of the box, so the app never steals a shortcut you were already using.
 
-Just about everything else is configurable too: the character (the built-in duck, an emoji, or your own image or GIF), its size, the list of phrases, the sound, how long the bubble stays up, and how often the duck talks to itself.
+Just about everything else is configurable too: the character (the built-in duck, an emoji, or your own image or GIF), its size, the list of phrases, the sound, how long the bubble stays up, how often the duck talks to itself, whether it bobs at all, and whether it starts with Windows.
 
 ## Install
 
