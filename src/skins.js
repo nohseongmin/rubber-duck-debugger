@@ -53,11 +53,11 @@ function sanitizeColor(c) {
 }
 
 function normalizeManifest(m) {
-  if (!m || typeof m !== 'object') throw new Error('skin.json 형식 오류');
+  if (!m || typeof m !== 'object') throw new Error('skin.json is not a valid object');
   const id = String(m.id || '').toLowerCase();
-  if (!SKIN_ID.test(id)) throw new Error('id는 소문자/숫자/하이픈(1~64자)만 허용');
+  if (!SKIN_ID.test(id)) throw new Error('id must be 1-64 chars of lowercase letters, digits or hyphens');
   const ch = m.character || {};
-  if (!ch.image || typeof ch.image !== 'string') throw new Error('character.image 필수');
+  if (!ch.image || typeof ch.image !== 'string') throw new Error('character.image is required');
   const out = {
     formatVersion: 1,
     id,
@@ -90,20 +90,20 @@ function importSkin(zipPath) {
   try {
     zip = new AdmZip(zipPath);
   } catch (e) {
-    return { ok: false, error: '압축 파일을 열 수 없습니다.' };
+    return { ok: false, error: 'could not open the archive' };
   }
   const entries = zip.getEntries();
-  if (entries.length === 0) return { ok: false, error: '빈 파일입니다.' };
-  if (entries.length > MAX_ENTRIES) return { ok: false, error: '파일이 너무 많습니다.' };
+  if (entries.length === 0) return { ok: false, error: 'the archive is empty' };
+  if (entries.length > MAX_ENTRIES) return { ok: false, error: 'too many files in the archive' };
 
   // 1) 매니페스트 찾기(루트 skin.json)
   const manEntry = entries.find((e) => !e.isDirectory && safeRelPath(e.entryName) === 'skin.json');
-  if (!manEntry) return { ok: false, error: 'skin.json이 없습니다.' };
+  if (!manEntry) return { ok: false, error: 'skin.json is missing' };
   let manifest;
   try {
     manifest = normalizeManifest(JSON.parse(manEntry.getData().toString('utf-8')));
   } catch (e) {
-    return { ok: false, error: '매니페스트 오류: ' + e.message };
+    return { ok: false, error: 'bad manifest — ' + e.message };
   }
 
   // 2) 추출할 파일 선별(화이트리스트/경로/크기 검증). 실행/미허용 파일은 스킵.
@@ -112,12 +112,12 @@ function importSkin(zipPath) {
   for (const e of entries) {
     if (e.isDirectory) continue;
     const rel = safeRelPath(e.entryName);
-    if (rel === null) return { ok: false, error: '허용되지 않는 경로가 있습니다.' };
+    if (rel === null) return { ok: false, error: 'the archive contains an unsafe path' };
     if (!ALLOWED_EXT.has(ext(rel))) continue; // 미허용 확장자는 무시(실행파일 등)
     const size = e.header.size;
-    if (size > MAX_FILE_BYTES) return { ok: false, error: '파일이 너무 큽니다: ' + rel };
+    if (size > MAX_FILE_BYTES) return { ok: false, error: 'file is too large: ' + rel };
     total += size;
-    if (total > MAX_TOTAL_BYTES) return { ok: false, error: '전체 용량이 너무 큽니다.' };
+    if (total > MAX_TOTAL_BYTES) return { ok: false, error: 'the pack is too large overall' };
     toWrite.push({ rel, data: e.getData() });
   }
 
@@ -125,12 +125,12 @@ function importSkin(zipPath) {
   const relSet = new Set(toWrite.map((w) => w.rel));
   const imgRel = safeRelPath(manifest.character.image);
   if (!imgRel || !relSet.has(imgRel) || !IMAGE_EXT.includes(ext(imgRel))) {
-    return { ok: false, error: 'character.image 파일을 찾을 수 없습니다.' };
+    return { ok: false, error: 'character.image was not found in the pack' };
   }
   if (manifest.sound) {
     const sRel = safeRelPath(manifest.sound.file);
     if (!sRel || !relSet.has(sRel) || !AUDIO_EXT.includes(ext(sRel))) {
-      return { ok: false, error: 'sound.file 파일을 찾을 수 없습니다.' };
+      return { ok: false, error: 'sound.file was not found in the pack' };
     }
   }
 
@@ -143,7 +143,7 @@ function importSkin(zipPath) {
       const target = path.resolve(dir, w.rel);
       // safeRelPath 가 이미 걸렀지만, 파일을 쓰기 직전이라 한 번 더 확인한다
       if (!target.startsWith(path.resolve(dir) + path.sep)) {
-        return { ok: false, error: '경로 검증 실패: ' + w.rel };
+        return { ok: false, error: 'unsafe path: ' + w.rel };
       }
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, w.data);
@@ -151,7 +151,7 @@ function importSkin(zipPath) {
     // 정규화된 매니페스트를 저장(원본 신뢰 안 함)
     fs.writeFileSync(path.join(dir, 'skin.json'), JSON.stringify(manifest, null, 2), 'utf-8');
   } catch (e) {
-    return { ok: false, error: '설치 실패: ' + e.message };
+    return { ok: false, error: 'install failed — ' + e.message };
   }
   return { ok: true, id: manifest.id, name: manifest.name };
 }

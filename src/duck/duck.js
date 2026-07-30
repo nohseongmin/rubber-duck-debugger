@@ -7,7 +7,7 @@ const BUILTIN_DUCK = '../../assets/duck.png';
 const FALLBACK = {
   size: 120,
   emoji: '🦆',
-  phrase: '꽥!',
+  phrase: 'Quack!',
   bubbleMs: 2200,
   volume: 0.6,
   bubbleBg: '#ffffff',

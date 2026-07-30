@@ -18,9 +18,9 @@ const TRAY_ICON = path.join(ASSETS_DIR, 'tray.png');
 const PRELOAD = path.join(__dirname, 'preload.js');
 
 const FILE_FILTERS = {
-  image: { name: '이미지/GIF', extensions: ['png', 'gif', 'apng', 'webp', 'jpg', 'jpeg', 'bmp'] },
-  sound: { name: '오디오', extensions: ['mp3', 'wav', 'ogg', 'm4a', 'flac'] },
-  skin: { name: '스킨팩', extensions: ['rduck', 'zip'] }
+  image: { name: 'Images & GIFs', extensions: ['png', 'gif', 'apng', 'webp', 'jpg', 'jpeg', 'bmp'] },
+  sound: { name: 'Audio', extensions: ['mp3', 'wav', 'ogg', 'm4a', 'flac'] },
+  skin: { name: 'Skin packs', extensions: ['rduck', 'zip'] }
 };
 
 let duckWin = null;
@@ -122,7 +122,7 @@ function openSettings() {
     width: SETTINGS_W,
     height: SETTINGS_H,
     resizable: true,
-    title: '러버덕 디버거 설정',
+    title: 'Rubber Duck Debugger — Settings',
     icon: APP_ICON,
     webPreferences: { preload: PRELOAD, contextIsolation: true, nodeIntegration: false }
   });
@@ -186,29 +186,29 @@ function applyHotkeys() {
     if (!run) continue;
     try {
       if (!globalShortcut.register(hk.accel, run)) {
-        console.warn('전역 단축키 등록 실패(충돌 가능):', hk.accel);
+        console.warn('hotkey registration failed (already taken?):', hk.accel);
       }
     } catch (e) {
-      console.warn('전역 단축키 오류:', hk.accel, e.message);
+      console.warn('invalid hotkey:', hk.accel, e.message);
     }
   }
 }
 
 // ---- 메뉴 ----
-const githubItem = { label: '🦆 러버덕 디버거 (GitHub)', click: () => shell.openExternal(REPO_URL) };
+const githubItem = { label: '🦆 Rubber Duck Debugger on GitHub', click: () => shell.openExternal(REPO_URL) };
 
 function buildTray() {
   const icon = nativeImage.createFromPath(TRAY_ICON);
   tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
-  tray.setToolTip('러버덕 디버거 — 클릭하면 꽥!');
+  tray.setToolTip('Rubber Duck Debugger — click to quack');
   tray.setContextMenu(Menu.buildFromTemplate([
     githubItem,
     { type: 'separator' },
-    { label: '꽥! 테스트', click: quackNow },
-    { label: '위치 이동', click: () => setMoveMode(true) },
-    { label: '설정…', click: openSettings },
+    { label: 'Test quack', click: quackNow },
+    { label: 'Move', click: () => setMoveMode(true) },
+    { label: 'Settings…', click: openSettings },
     { type: 'separator' },
-    { label: '종료', click: quitApp }
+    { label: 'Quit', click: quitApp }
   ]));
   tray.on('click', quackNow);
 }
@@ -216,12 +216,12 @@ function buildTray() {
 function popupDuckMenu() {
   if (!duckWin) return;
   Menu.buildFromTemplate([
-    { label: moveMode ? '✓ 이동 완료' : '위치 이동', click: () => setMoveMode(!moveMode) },
-    { label: '설정…', click: openSettings },
+    { label: moveMode ? '✓ Done moving' : 'Move', click: () => setMoveMode(!moveMode) },
+    { label: 'Settings…', click: openSettings },
     { type: 'separator' },
     githubItem,
     { type: 'separator' },
-    { label: '닫기', click: quitApp }
+    { label: 'Quit', click: quitApp }
   ]).popup({ window: duckWin });
 }
 

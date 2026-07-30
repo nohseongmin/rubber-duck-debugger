@@ -1,92 +1,92 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; script-src 'self';">
-  <title>러버덕 디버거 설정</title>
+  <title>Rubber Duck Debugger — Settings</title>
   <link rel="stylesheet" href="settings.css">
 </head>
 <body>
-  <h1>🦆 러버덕 디버거 설정</h1>
+  <h1>🦆 Rubber Duck Debugger</h1>
 
   <section>
-    <h2>스킨 <small>(.rduck 스킨팩 · 적용 시 아래 캐릭터/소리/문구를 대신함)</small></h2>
+    <h2>Skin <small>(a .rduck pack replaces the character, sound and phrases below)</small></h2>
     <div id="skinBanner" class="skin-banner" hidden></div>
     <div id="skinGrid" class="skin-grid"></div>
     <div class="actions" style="justify-content: space-between; margin-top: 10px;">
-      <button id="skinImport" type="button">스킨팩 가져오기…</button>
-      <button id="skinNone" type="button">직접 설정으로</button>
+      <button id="skinImport" type="button">Import skin pack…</button>
+      <button id="skinNone" type="button">Use my own settings</button>
     </div>
-    <small class="hint">스킨팩은 이미지/GIF·소리·문구를 담은 .rduck(zip) 파일입니다.</small>
+    <small class="hint">A skin pack is a .rduck (zip) file holding an image or GIF, a sound and some phrases.</small>
   </section>
 
   <section>
-    <h2>캐릭터</h2>
+    <h2>Character</h2>
     <div class="radios">
-      <label><input type="radio" name="charType" value="default" checked> 기본 오리</label>
-      <label><input type="radio" name="charType" value="emoji"> 이모지</label>
-      <label><input type="radio" name="charType" value="image"> 이미지/GIF 파일</label>
+      <label><input type="radio" name="charType" value="default" checked> Bundled duck</label>
+      <label><input type="radio" name="charType" value="emoji"> Emoji</label>
+      <label><input type="radio" name="charType" value="image"> Image / GIF</label>
     </div>
-    <div class="row"><span class="lbl">이모지</span>
+    <div class="row"><span class="lbl">Emoji</span>
       <input id="emoji" type="text" maxlength="8" value="🦆"></div>
-    <div class="row"><span class="lbl">이미지</span>
-      <input id="imagePath" type="text" placeholder="선택 안 함" readonly>
-      <button id="pickImage" type="button">찾기…</button></div>
-    <div class="row"><span class="lbl">크기</span>
+    <div class="row"><span class="lbl">File</span>
+      <input id="imagePath" type="text" placeholder="None selected" readonly>
+      <button id="pickImage" type="button">Browse…</button></div>
+    <div class="row"><span class="lbl">Size</span>
       <input id="size" type="range" min="60" max="220" value="120">
       <span id="sizeVal" class="val">120px</span></div>
     <div id="preview" class="preview"></div>
   </section>
 
   <section>
-    <h2>말풍선 문구 <small>(한 줄에 하나 · 랜덤 표시)</small></h2>
-    <textarea id="phrases" rows="6" placeholder="꽥!"></textarea>
-    <div class="row"><span class="lbl">표시 시간</span>
+    <h2>Phrases <small>(one per line · picked at random)</small></h2>
+    <textarea id="phrases" rows="6" placeholder="Quack!"></textarea>
+    <div class="row"><span class="lbl">Bubble</span>
       <input id="bubbleDuration" type="number" min="500" max="10000" step="100" value="2200">
       <span class="val">ms</span></div>
   </section>
 
   <section>
-    <h2>소리</h2>
+    <h2>Sound</h2>
     <div class="radios">
-      <label><input type="radio" name="soundType" value="synth" checked> 기본 꽥(합성)</label>
-      <label><input type="radio" name="soundType" value="file"> 사운드 파일</label>
+      <label><input type="radio" name="soundType" value="synth" checked> Built-in quack</label>
+      <label><input type="radio" name="soundType" value="file"> Sound file</label>
     </div>
-    <div class="row"><span class="lbl">파일</span>
-      <input id="soundPath" type="text" placeholder="선택 안 함" readonly>
-      <button id="pickSound" type="button">찾기…</button></div>
-    <div class="row"><span class="lbl">볼륨</span>
+    <div class="row"><span class="lbl">File</span>
+      <input id="soundPath" type="text" placeholder="None selected" readonly>
+      <button id="pickSound" type="button">Browse…</button></div>
+    <div class="row"><span class="lbl">Volume</span>
       <input id="volume" type="range" min="0" max="1" step="0.05" value="0.6">
       <span id="volVal" class="val">60%</span></div>
   </section>
 
   <section>
-    <h2>자동 혼잣말 <small>(가끔 스스로 꽥)</small></h2>
-    <label class="checkbox"><input id="chatterEnabled" type="checkbox" checked> 사용</label>
-    <div class="row"><span class="lbl">간격</span>
-      <input id="chatterMin" type="number" min="5" max="600" step="5" value="30"> ~
+    <h2>Talks to itself <small>(the duck speaks up now and then)</small></h2>
+    <label class="checkbox"><input id="chatterEnabled" type="checkbox" checked> Enabled</label>
+    <div class="row"><span class="lbl">Every</span>
+      <input id="chatterMin" type="number" min="5" max="600" step="5" value="30"> to
       <input id="chatterMax" type="number" min="5" max="600" step="5" value="75">
-      <span class="val">초</span></div>
-    <label class="checkbox"><input id="chatterSound" type="checkbox"> 혼잣말에도 소리 내기</label>
+      <span class="val">sec</span></div>
+    <label class="checkbox"><input id="chatterSound" type="checkbox"> Play the sound too</label>
   </section>
 
   <section>
-    <h2>단축키 <small>(전역 · 키를 눌러 액션 실행)</small></h2>
+    <h2>Hotkeys <small>(global · press a key to run an action)</small></h2>
     <div id="hotkeyList"></div>
-    <button id="hotkeyAdd" type="button">+ 단축키 추가</button>
-    <small class="hint">전역 단축키는 다른 창을 쓰는 중에도 작동합니다. 액션: 꽥 · 다음 스킨 · 숨기기/보이기 · 설정 열기.</small>
+    <button id="hotkeyAdd" type="button">+ Add hotkey</button>
+    <small class="hint">Global hotkeys work while another app has focus. Actions: quack, next skin, hide/show, open settings.</small>
   </section>
 
   <section>
-    <label class="checkbox"><input id="alwaysOnTop" type="checkbox" checked> 항상 위에 표시</label>
-    <label class="checkbox"><input id="idleBob" type="checkbox" checked> 둥실둥실 대기 애니메이션</label>
-    <label class="checkbox"><input id="launchAtLogin" type="checkbox"> PC가 켜지면 자동 실행</label>
+    <label class="checkbox"><input id="alwaysOnTop" type="checkbox" checked> Keep on top of other windows</label>
+    <label class="checkbox"><input id="idleBob" type="checkbox" checked> Bob up and down while idle</label>
+    <label class="checkbox"><input id="launchAtLogin" type="checkbox"> Start with Windows</label>
   </section>
 
   <div class="actions">
-    <button id="test" type="button">꽥! 테스트</button>
-    <button id="save" type="button" class="primary">저장</button>
+    <button id="test" type="button">Test quack</button>
+    <button id="save" type="button" class="primary">Save</button>
   </div>
   <div id="toast" class="toast"></div>
 

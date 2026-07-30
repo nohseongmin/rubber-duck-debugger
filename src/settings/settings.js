@@ -16,10 +16,10 @@ const FALLBACK = {
 };
 
 const HK_ACTIONS = [
-  { value: 'quack', label: '꽥' },
-  { value: 'next-skin', label: '다음 스킨' },
-  { value: 'toggle-hide', label: '숨기기/보이기' },
-  { value: 'open-settings', label: '설정 열기' }
+  { value: 'quack', label: 'Quack' },
+  { value: 'next-skin', label: 'Next skin' },
+  { value: 'toggle-hide', label: 'Hide / show' },
+  { value: 'open-settings', label: 'Open settings' }
 ];
 
 const CHAR_TYPES = ['default', 'emoji', 'image'];
@@ -175,8 +175,8 @@ function hotkeyRow(hk, index) {
 
   const capturing = capturingRow === index;
   const key = makeEl('div', capturing ? 'hk-key capturing' : 'hk-key',
-    capturing ? '키 조합을 누르세요…' : (accelLabel(hk.accel) || '미지정'));
-  key.title = '클릭해서 키 지정';
+    capturing ? 'Press a key combination…' : (accelLabel(hk.accel) || 'Not set'));
+  key.title = 'Click to set a key';
   key.addEventListener('click', () => {
     capturingRow = capturing ? -1 : index;
     renderHotkeys();
@@ -184,7 +184,7 @@ function hotkeyRow(hk, index) {
 
   const remove = makeEl('button', 'hk-del', '×');
   remove.type = 'button';
-  remove.title = '삭제';
+  remove.title = 'Remove';
   remove.addEventListener('click', () => {
     hotkeys.splice(index, 1);
     if (capturingRow === index) capturingRow = -1;
@@ -233,17 +233,17 @@ function skinCard(skin, activeSkin, refresh) {
   card.addEventListener('click', async () => {
     await window.api.setActiveSkin(skin.id);
     await refresh();
-    toast('스킨 적용됨 꽥!');
+    toast('Skin applied. Quack!');
   });
 
   const remove = makeEl('button', 'sdel', '×');
   remove.type = 'button';
-  remove.title = '삭제';
+  remove.title = 'Remove';
   remove.addEventListener('click', async (e) => {
     e.stopPropagation(); // 카드 클릭(적용)과 겹치지 않게
     await window.api.deleteSkin(skin.id);
     await refresh();
-    toast('스킨 삭제됨');
+    toast('Skin removed.');
   });
 
   const thumb = makeEl('img', 'thumb');
@@ -260,13 +260,13 @@ async function renderSkins() {
   const active = skins.find((s) => s.id === activeSkin);
   const banner = $('skinBanner');
   banner.hidden = !active;
-  if (active) banner.textContent = `스킨 "${active.name}" 적용 중 — 아래 캐릭터/소리/문구 설정은 무시됩니다.`;
+  if (active) banner.textContent = `Skin "${active.name}" is active — the character, sound and phrase settings below are ignored.`;
 
   const grid = $('skinGrid');
   grid.textContent = '';
   if (!skins.length) {
     grid.appendChild(makeEl('div', 'skin-empty',
-      '설치된 스킨이 없습니다. "스킨팩 가져오기"로 .rduck 파일을 추가하세요.'));
+      'No skins installed yet. Use "Import skin pack" to add a .rduck file.'));
     return;
   }
   for (const skin of skins) grid.appendChild(skinCard(skin, activeSkin, renderSkins));
@@ -275,15 +275,15 @@ async function renderSkins() {
 $('skinImport').addEventListener('click', async () => {
   const res = await window.api.importSkin();
   if (res.canceled) return;
-  if (!res.ok) { toast('가져오기 실패: ' + (res.error || '알 수 없음')); return; }
+  if (!res.ok) { toast('Import failed: ' + (res.error || 'unknown error')); return; }
   await renderSkins();
-  toast(`"${res.name}" 스킨 추가됨 꽥!`);
+  toast(`Added skin "${res.name}". Quack!`);
 });
 
 $('skinNone').addEventListener('click', async () => {
   await window.api.setActiveSkin(null);
   await renderSkins();
-  toast('직접 설정으로 전환');
+  toast('Back to your own settings.');
 });
 
 // ---- 입력 반응 ----
@@ -314,7 +314,7 @@ $('pickSound').addEventListener('click', async () => {
 // ---- 저장 / 테스트 ----
 async function save() {
   await window.api.saveConfig(collect());
-  toast('저장됐어 꽥!');
+  toast('Saved. Quack!');
 }
 
 $('save').addEventListener('click', save);

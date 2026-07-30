@@ -35,8 +35,6 @@ Moving the duck is a separate mode, deliberately. Right-click it, pick Move, and
 
 Global hotkeys can trigger a quack, cycle to the next skin, hide or show the duck, or open settings, and they fire while another app has focus. None are set up front — the app shouldn't take a shortcut you were already using, so you pick them yourself.
 
-Most of the rest is up to you in Settings: the character (the bundled duck, an emoji, or your own image or GIF), how big it is, what it says, what it sounds like, how often it talks to itself. If the bobbing bugs you, turn it off. There's also a switch to start the duck with Windows, off unless you ask for it.
-
 ## Install
 
 1. Download **[RubberDuckDebugger-Setup.exe](https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe)** and run it.
@@ -45,9 +43,23 @@ Most of the rest is up to you in Settings: the character (the bundled duck, an e
 
 Windows x64 for now. New versions go up on the [releases page](https://github.com/nohseongmin/rubber-duck-debugger/releases); there's no auto-update yet.
 
+## Settings
+
+<p align="center">
+  <img src="assets/shot-settings.png" alt="The settings window" width="820">
+</p>
+
+One window, no tabs. Pick the character — the bundled duck, an emoji, or your own image or GIF — and set how big it is. Type the lines you want it to say, one per line, and it picks one at random each time. Swap the quack for your own sound file, decide how often the duck talks to itself, and turn the idle bobbing off if it distracts you. There's a switch to start it with Windows, off unless you ask.
+
 ## Skin packs
 
-A skin pack is a zip holding a `skin.json` and whatever that file points at, renamed to `.rduck`. Import one from Settings → Skin. There's a sample pack in [`skins/`](skins/) if you want to see the shape of it before making your own.
+<p align="center">
+  <img src="assets/shot-skins.png" alt="The bundled duck next to the Pinky Duck skin" width="820">
+</p>
+
+A skin bundles the character, the sound, the phrases and the bubble colours into one file, so switching the whole look is a single click instead of six settings. The sample pack in [`skins/`](skins/) is the pink duck above.
+
+A pack is just a zip holding a `skin.json` and whatever that file points at, renamed to `.rduck`. Import one from Settings → Skin.
 
 ```
 my-skin.rduck
@@ -79,7 +91,7 @@ Skins are assets, not code — nothing inside a pack is ever executed. On import
 ```bash
 npm install
 npm start        # run it
-npm test         # skin import security tests
+npm test         # config and skin-import tests
 npm run dist     # build installers into dist/
 ```
 

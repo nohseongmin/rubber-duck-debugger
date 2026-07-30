@@ -6,12 +6,12 @@ const { app } = require('electron');
 const DEFAULTS = {
   character: { type: 'default', emoji: '🦆', imagePath: null, size: 120 },
   phrases: [
-    '꽥!',
-    '꽥꽥!',
-    '한 줄씩 설명해봐',
-    '그래서 그 변수가 뭐라고?',
-    '거기서 진짜 그 값이 맞아?',
-    '버그… 방금 찾았지?'
+    'Quack!',
+    'Quack quack!',
+    'Walk me through it, line by line.',
+    'So what is that variable, exactly?',
+    'Is that really the value there?',
+    'You just spotted it, didn\'t you?'
   ],
   sound: { type: 'synth', filePath: null, volume: 0.6 },
   idleChatter: { enabled: true, minSec: 30, maxSec: 75, sound: false }, // 가끔 스스로 꽥(기본 소리 없음)
