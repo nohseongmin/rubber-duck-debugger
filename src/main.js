@@ -28,7 +28,6 @@ let settingsWin = null;
 let tray = null;
 let isQuitting = false;
 let moveMode = false;
-let duckHidden = false;
 
 // ---- 설정 ----
 
@@ -40,20 +39,16 @@ function effectiveConfig() {
 
   const skin = skins.getSkin(cfg.activeSkin);
   if (!skin) {
-    cfg.activeSkin = null; // 스킨이 삭제됐으면 조용히 해제
+    // 스킨 폴더가 사라졌으면 참조를 지운다(설정에도 반영해 다음부터 다시 찾지 않도록)
+    config.save({ activeSkin: null });
+    cfg.activeSkin = null;
     return cfg;
   }
 
-  const defaultVolume = config.DEFAULTS.sound.volume;
-  cfg.character = {
-    type: 'image',
-    imagePath: skin.imagePath,
-    size: skin.size,
-    emoji: (cfg.character && cfg.character.emoji) || config.DEFAULTS.character.emoji
-  };
+  cfg.character = { type: 'image', imagePath: skin.imagePath, size: skin.size, emoji: cfg.character.emoji };
   cfg.sound = skin.soundPath
-    ? { type: 'file', filePath: skin.soundPath, volume: skin.volume != null ? skin.volume : defaultVolume }
-    : { type: 'synth', filePath: null, volume: (cfg.sound && cfg.sound.volume) != null ? cfg.sound.volume : defaultVolume };
+    ? { type: 'file', filePath: skin.soundPath, volume: skin.volume }
+    : { type: 'synth', filePath: null, volume: cfg.sound.volume };
   if (skin.phrases) cfg.phrases = skin.phrases;
   cfg.bubble = skin.bubble || null;
   return cfg;
@@ -63,25 +58,15 @@ function sendConfigToDuck() {
   if (duckWin) duckWin.webContents.send('config', effectiveConfig());
 }
 
-// PC 시작 시 자동 실행. OS 쪽이 실제 상태이므로 시작할 때 설정을 OS 기준으로 맞춘다
-// (사용자가 Windows 시작프로그램에서 직접 끈 경우 체크박스가 거짓말하지 않도록).
-function applyLaunchAtLogin(enabled) {
-  app.setLoginItemSettings({ openAtLogin: !!enabled });
-}
-
+// 자동 실행은 OS 쪽이 실제 상태다. 시작할 때 설정을 OS 기준으로 맞춰,
+// 사용자가 윈도우 시작프로그램에서 직접 껐을 때 체크박스가 거짓말하지 않게 한다.
 function syncLaunchAtLogin() {
-  const cfg = config.load();
   const actual = app.getLoginItemSettings().openAtLogin;
-  if (cfg.launchAtLogin !== actual) {
-    cfg.launchAtLogin = actual;
-    config.save(cfg);
-  }
+  if (config.load().launchAtLogin !== actual) config.save({ launchAtLogin: actual });
 }
 
 function setActiveSkin(id) {
-  const cfg = config.load();
-  cfg.activeSkin = id || null;
-  const saved = config.save(cfg);
+  const saved = config.save({ activeSkin: id || null });
   sendConfigToDuck();
   return saved.activeSkin;
 }
@@ -161,6 +146,7 @@ function setMoveMode(on) {
   moveMode = on;
   if (!duckWin) return;
   if (on) {
+    duckWin.show(); // 숨긴 상태였다면 옮길 수 있게 다시 띄운다
     duckWin.setIgnoreMouseEvents(false);
     duckWin.focus(); // Esc 입력을 받기 위해
   } else {
@@ -177,10 +163,11 @@ function cycleSkin() {
   setActiveSkin(ids[(idx + 1) % ids.length]);
 }
 
+// 창의 실제 표시 상태를 기준으로 토글한다(별도 플래그를 두면 다른 경로로
+// show() 된 뒤 한 번 헛도는 문제가 생긴다)
 function toggleHide() {
   if (!duckWin) return;
-  duckHidden = !duckHidden;
-  if (duckHidden) duckWin.hide();
+  if (duckWin.isVisible()) duckWin.hide();
   else duckWin.show();
 }
 
@@ -251,7 +238,7 @@ ipcMain.handle('get-config', () => config.load());
 
 ipcMain.handle('save-config', (_e, cfg) => {
   const saved = config.save(cfg);
-  applyLaunchAtLogin(saved.launchAtLogin);
+  app.setLoginItemSettings({ openAtLogin: !!saved.launchAtLogin });
   if (duckWin) {
     duckWin.setAlwaysOnTop(saved.alwaysOnTop);
     sendConfigToDuck();
@@ -284,9 +271,7 @@ ipcMain.on('move-window', (_e, x, y) => {
 });
 
 ipcMain.on('save-position', (_e, x, y) => {
-  const cfg = config.load();
-  cfg.position = { x: Math.round(x), y: Math.round(y) };
-  config.save(cfg);
+  config.save({ position: { x: Math.round(x), y: Math.round(y) } });
 });
 
 ipcMain.on('set-mouse-through', (_e, through) => {

@@ -27,15 +27,15 @@ Rubber duck debugging is the old habit of explaining your broken code out loud, 
 
 ## What it does
 
-The duck floats above your other windows on a transparent background, so all you see is the duck. Click it and it quacks, squishes, and pops up a speech bubble with one of your phrases. Leave it alone and it drifts gently up and down, and every so often it says something by itself — silently by default, so it won't cut into whatever you're doing.
+The duck sits on top of your other windows with a transparent background, so there's no window frame around it — just a duck on your desktop. Click it and it quacks, squishes, and says something in a speech bubble. Left alone it drifts slowly up and down, and now and then it pipes up on its own. That one is silent by default; a bubble appears but nothing interrupts you.
 
-Everything except the duck is click-through, so your desktop icons and windows still behave normally.
+The rest of the window is click-through, so your desktop icons keep working as if it weren't there.
 
-Moving it is a separate mode on purpose. Right-click, pick Move, and a dashed outline appears; drag the duck wherever you want and press Done or Esc. That way clicking to quack and dragging to reposition never fight each other, which was the most annoying thing about the first version.
+Moving the duck is a separate mode, deliberately. Right-click it, pick Move, and a dashed outline appears — drag it where you want, then hit Done or Esc. In the first version a click and a drag were told apart by how far the mouse travelled, which meant half your quacks were swallowed by an accidental drag. Splitting the two fixed that.
 
-You can bind global hotkeys to whatever you like — quack, cycle to the next skin, hide or show the duck, open settings. They work while another app has focus. Nothing is bound out of the box, so the app never steals a shortcut you were already using.
+Global hotkeys can trigger a quack, cycle to the next skin, hide or show the duck, or open settings, and they fire while another app has focus. None are set up front — the app shouldn't take a shortcut you were already using, so you pick them yourself.
 
-Just about everything else is configurable too: the character (the built-in duck, an emoji, or your own image or GIF), its size, the list of phrases, the sound, how long the bubble stays up, how often the duck talks to itself, whether it bobs at all, and whether it starts with Windows.
+Most of the rest is up to you in Settings: the character (the bundled duck, an emoji, or your own image or GIF), how big it is, what it says, what it sounds like, how often it talks to itself. If the bobbing bugs you, turn it off. There's also a switch to start the duck with Windows, off unless you ask for it.
 
 ## Install
 
@@ -87,7 +87,7 @@ It's an Electron app: main process in `src/main.js`, the duck window in `src/duc
 
 ## Privacy
 
-There's no network code in this app. No accounts, no telemetry, nothing leaves your machine. The renderer runs with `contextIsolation` on and `nodeIntegration` off, talks to the main process only through the small allowlist in `src/preload.js`, and a CSP stops it loading anything remote.
+The app has no network code at all — no account, no telemetry, nothing sent anywhere. The renderer runs with `contextIsolation` on and `nodeIntegration` off, and it can only reach the main process through the short allowlist in `src/preload.js`. A CSP blocks it from loading anything remote.
 
 ## Roadmap
 

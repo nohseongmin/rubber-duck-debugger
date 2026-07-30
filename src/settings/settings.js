@@ -24,7 +24,6 @@ const HK_ACTIONS = [
 
 const CHAR_TYPES = ['default', 'emoji', 'image'];
 
-let current = null;
 let hotkeys = [];       // [{ accel, action }]
 let capturingRow = -1;  // 키 캡처 중인 행 index (-1 = 없음)
 let toastTimer = null;
@@ -63,8 +62,6 @@ function toast(msg) {
 
 // ---- 설정 → 화면 ----
 function fill(cfg) {
-  current = cfg;
-
   const ch = cfg.character || {};
   checkRadio('charType', CHAR_TYPES.includes(ch.type) ? ch.type : 'default');
   $('emoji').value = ch.emoji || FALLBACK.emoji;
@@ -102,9 +99,10 @@ function fill(cfg) {
 }
 
 // ---- 화면 → 설정 ----
+// 이 창이 다루는 값만 보낸다. 나머지(위치·활성 스킨 등)는 메인이 저장본 위에 병합하므로
+// 설정창을 열어둔 사이 오리를 옮겨도 그 위치가 되돌아가지 않는다.
 function collect() {
   return {
-    ...(current || {}),
     character: {
       type: checkedValue('charType'),
       emoji: $('emoji').value || FALLBACK.emoji,
@@ -233,8 +231,7 @@ function skinCard(skin, activeSkin, refresh) {
   const card = makeEl('div', skin.id === activeSkin ? 'skin-card active' : 'skin-card');
   card.title = skin.name;
   card.addEventListener('click', async () => {
-    const now = await window.api.setActiveSkin(skin.id);
-    if (current) current.activeSkin = now;
+    await window.api.setActiveSkin(skin.id);
     await refresh();
     toast('스킨 적용됨 꽥!');
   });
@@ -259,7 +256,6 @@ function skinCard(skin, activeSkin, refresh) {
 
 async function renderSkins() {
   const { skins, activeSkin } = await window.api.getSkins();
-  if (current) current.activeSkin = activeSkin; // 저장 시 덮어쓰지 않도록 동기화
 
   const active = skins.find((s) => s.id === activeSkin);
   const banner = $('skinBanner');
@@ -285,8 +281,7 @@ $('skinImport').addEventListener('click', async () => {
 });
 
 $('skinNone').addEventListener('click', async () => {
-  const now = await window.api.setActiveSkin(null);
-  if (current) current.activeSkin = now;
+  await window.api.setActiveSkin(null);
   await renderSkins();
   toast('직접 설정으로 전환');
 });
@@ -318,7 +313,7 @@ $('pickSound').addEventListener('click', async () => {
 
 // ---- 저장 / 테스트 ----
 async function save() {
-  current = await window.api.saveConfig(collect());
+  await window.api.saveConfig(collect());
   toast('저장됐어 꽥!');
 }
 

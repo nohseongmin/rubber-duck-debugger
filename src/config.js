@@ -30,22 +30,22 @@ function configPath() {
   return path.join(app.getPath('userData'), 'config.json');
 }
 
-// 기본값 위에 사용자 설정을 얕게/깊게 병합 (배열은 통째로 교체)
+const isPlainObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+// 기본값 위에 사용자 설정을 병합한다 (배열은 통째로 교체)
 function deepMerge(base, over) {
   if (over === null || over === undefined) return clone(base);
-  if (Array.isArray(base) || typeof base !== 'object') {
-    return over;
-  }
+  if (!isPlainObject(base)) return over;
+
   const out = { ...base };
   for (const k of Object.keys(over)) {
-    if (
-      over[k] && typeof over[k] === 'object' && !Array.isArray(over[k]) &&
-      base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])
-    ) {
-      out[k] = deepMerge(base[k], over[k]);
-    } else if (over[k] !== undefined) {
-      out[k] = over[k];
-    }
+    const value = over[k];
+    if (value === undefined) continue;
+    if (isPlainObject(value) && isPlainObject(base[k])) out[k] = deepMerge(base[k], value);
+    // null 로 character·sound 같은 객체 기본값을 지우면 이후 접근이 터진다.
+    // position·activeSkin 처럼 기본값이 null 인 필드는 이 조건에 걸리지 않는다.
+    else if (value === null && isPlainObject(base[k])) continue;
+    else out[k] = value;
   }
   return out;
 }
@@ -73,8 +73,10 @@ function load() {
   }
 }
 
-function save(cfg) {
-  const merged = deepMerge(DEFAULTS, cfg || {});
+// 저장된 설정 위에 patch 를 덮는다. 호출자가 바꾸려는 필드만 보내면 되고,
+// 그 사이 다른 곳에서 바뀐 값(예: 드래그로 옮긴 위치)을 덮어쓰지 않는다.
+function save(patch) {
+  const merged = deepMerge(load(), patch || {});
   try {
     fs.writeFileSync(configPath(), JSON.stringify(merged, null, 2), 'utf-8');
   } catch (e) {

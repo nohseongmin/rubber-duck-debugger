@@ -5,7 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node test/skins.test.js",
+    "test": "node test/config.test.js && node test/skins.test.js",
     "dist": "electron-builder"
   },
   "author": "",

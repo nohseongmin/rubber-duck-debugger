@@ -16,6 +16,7 @@ const MAX_TOTAL_BYTES = 30 * 1024 * 1024;  // 총합 30MB
 const IMAGE_EXT = ['png', 'gif', 'apng', 'webp', 'jpg', 'jpeg', 'bmp'];
 const AUDIO_EXT = ['mp3', 'wav', 'ogg', 'm4a', 'flac'];
 const ALLOWED_EXT = new Set([...IMAGE_EXT, ...AUDIO_EXT, 'json']);
+const SKIN_ID = /^[a-z0-9][a-z0-9-]{0,63}$/; // 폴더명으로 쓰이므로 안전한 문자만
 
 function skinsDir() {
   const d = path.join(app.getPath('userData'), 'skins');
@@ -37,6 +38,13 @@ function safeRelPath(entryName) {
   return parts.join('/');
 }
 
+// 숫자가 아니면 기본값. 스킨은 남이 만든 파일이라 값 범위를 강제한다.
+function clamp(v, lo, hi, dflt) {
+  const n = Number(v);
+  if (v === null || v === undefined || v === '' || !Number.isFinite(n)) return dflt;
+  return Math.min(hi, Math.max(lo, n));
+}
+
 function sanitizeColor(c) {
   if (typeof c !== 'string') return null;
   if (/^#[0-9a-fA-F]{3}$/.test(c) || /^#[0-9a-fA-F]{6}$/.test(c)) return c;
@@ -47,7 +55,7 @@ function sanitizeColor(c) {
 function normalizeManifest(m) {
   if (!m || typeof m !== 'object') throw new Error('skin.json 형식 오류');
   const id = String(m.id || '').toLowerCase();
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new Error('id는 소문자/숫자/하이픈(1~64자)만 허용');
+  if (!SKIN_ID.test(id)) throw new Error('id는 소문자/숫자/하이픈(1~64자)만 허용');
   const ch = m.character || {};
   if (!ch.image || typeof ch.image !== 'string') throw new Error('character.image 필수');
   const out = {
@@ -56,10 +64,10 @@ function normalizeManifest(m) {
     name: String(m.name || id).slice(0, 60),
     author: String(m.author || '').slice(0, 60),
     version: String(m.version || '1.0.0').slice(0, 20),
-    character: { image: ch.image, size: clampInt(ch.size, 60, 400, 120) }
+    character: { image: ch.image, size: Math.round(clamp(ch.size, 60, 400, 120)) }
   };
   if (m.sound && typeof m.sound === 'object' && m.sound.file) {
-    out.sound = { file: String(m.sound.file), volume: clampNum(m.sound.volume, 0, 1, 0.6) };
+    out.sound = { file: String(m.sound.file), volume: clamp(m.sound.volume, 0, 1, 0.6) };
   }
   if (Array.isArray(m.phrases)) {
     const ph = m.phrases.map((s) => String(s).slice(0, 120)).filter(Boolean).slice(0, 50);
@@ -74,25 +82,6 @@ function normalizeManifest(m) {
     if (Object.keys(b).length) out.bubble = b;
   }
   return out;
-}
-
-function clampInt(v, lo, hi, dflt) {
-  const n = parseInt(v, 10);
-  if (!Number.isFinite(n)) return dflt;
-  return Math.min(hi, Math.max(lo, n));
-}
-function clampNum(v, lo, hi, dflt) {
-  const n = parseFloat(v);
-  if (!Number.isFinite(n)) return dflt;
-  return Math.min(hi, Math.max(lo, n));
-}
-
-// zip 경로 → 실제 저장 파일 경로(스킨 폴더 밖으로 못 나가게 검증)
-function resolveInside(baseDir, rel) {
-  const target = path.resolve(baseDir, rel);
-  const baseResolved = path.resolve(baseDir) + path.sep;
-  if (target !== path.resolve(baseDir) && !target.startsWith(baseResolved)) return null;
-  return target;
 }
 
 /** .rduck/.zip 임포트. 성공 시 {ok, id, name}, 실패 시 {ok:false, error} */
@@ -151,8 +140,11 @@ function importSkin(zipPath) {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.mkdirSync(dir, { recursive: true });
     for (const w of toWrite) {
-      const target = resolveInside(dir, w.rel);
-      if (!target) return { ok: false, error: '경로 검증 실패: ' + w.rel };
+      const target = path.resolve(dir, w.rel);
+      // safeRelPath 가 이미 걸렀지만, 파일을 쓰기 직전이라 한 번 더 확인한다
+      if (!target.startsWith(path.resolve(dir) + path.sep)) {
+        return { ok: false, error: '경로 검증 실패: ' + w.rel };
+      }
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, w.data);
     }
@@ -166,7 +158,7 @@ function importSkin(zipPath) {
 
 /** 스킨 하나의 메타(절대경로 포함). 없으면 null */
 function getSkin(id) {
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(String(id || ''))) return null;
+  if (!SKIN_ID.test(String(id || ''))) return null;
   const dir = path.join(skinsDir(), id);
   const manPath = path.join(dir, 'skin.json');
   if (!fs.existsSync(manPath)) return null;
@@ -203,7 +195,7 @@ function listSkins() {
 }
 
 function deleteSkin(id) {
-  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(String(id || ''))) return false;
+  if (!SKIN_ID.test(String(id || ''))) return false;
   try {
     fs.rmSync(path.join(skinsDir(), id), { recursive: true, force: true });
     return true;
@@ -212,4 +204,4 @@ function deleteSkin(id) {
   }
 }
 
-module.exports = { importSkin, listSkins, getSkin, deleteSkin, skinsDir };
+module.exports = { importSkin, listSkins, getSkin, deleteSkin };
