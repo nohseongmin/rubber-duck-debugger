@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('api', {
   importSkin: () => ipcRenderer.invoke('import-skin'),
   setActiveSkin: (id) => ipcRenderer.invoke('set-active-skin', id),
   deleteSkin: (id) => ipcRenderer.invoke('delete-skin', id),
+  publishSkin: (id) => ipcRenderer.invoke('publish-skin', id),
 
   // 렌더러 → 메인 (단방향)
   moveWindow: (x, y) => ipcRenderer.send('move-window', x, y),

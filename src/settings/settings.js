@@ -255,7 +255,11 @@ function skinCard(skin, activeSkin, refresh) {
 }
 
 async function renderSkins() {
-  const { skins, activeSkin } = await window.api.getSkins();
+  const { skins, activeSkin, steam } = await window.api.getSkins();
+  const steamReady = !!(steam && steam.available);
+  $('steamStatus').textContent = steamReady
+    ? 'Steam Workshop connected — subscribed skins show up here, and ↑ publishes your own.'
+    : 'Steam is not running, so Workshop skins are unavailable. Local skin packs still work.';
 
   const active = skins.find((s) => s.id === activeSkin);
   const banner = $('skinBanner');
@@ -269,7 +273,7 @@ async function renderSkins() {
       'No skins installed yet. Use "Import skin pack" to add a .rduck file.'));
     return;
   }
-  for (const skin of skins) grid.appendChild(skinCard(skin, activeSkin, renderSkins));
+  for (const skin of skins) grid.appendChild(skinCard(skin, activeSkin, renderSkins, steamReady));
 }
 
 $('skinImport').addEventListener('click', async () => {

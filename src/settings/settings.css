@@ -72,10 +72,12 @@ button.primary:hover { background: #ffc400; }
 }
 .skin-card .sname { font-size: 12px; font-weight: 700; margin-top: 6px; word-break: break-word; }
 .skin-card .sauth { font-size: 11px; color: #999; }
-.skin-card .sdel {
-  position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; line-height: 18px;
+.skin-card .sdel, .skin-card .spub {
+  position: absolute; top: 4px; width: 20px; height: 20px; line-height: 18px;
   border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; cursor: pointer;
 }
+.skin-card .sdel { right: 4px; }
+.skin-card .spub { left: 4px; background: rgba(24,90,160,.75); }
 .skin-empty { grid-column: 1 / -1; color: #aaa; font-size: 13px; text-align: center; padding: 16px 0; }
 .hotkey-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
 .hotkey-row select { padding: 6px 8px; border: 1px solid #d4d7dd; border-radius: 8px; font-size: 13px; background: #fff; }

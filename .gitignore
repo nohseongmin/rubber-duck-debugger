@@ -7,3 +7,4 @@ npm-debug.log*
 Thumbs.db
 .env
 config.json
+steam_appid.txt

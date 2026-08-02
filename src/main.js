@@ -3,6 +3,7 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, sh
 const path = require('path');
 const config = require('./config');
 const skins = require('./skins');
+const steam = require('./steam');
 
 const REPO_URL = 'https://github.com/nohseongmin/rubber-duck-debugger';
 
@@ -37,7 +38,7 @@ function effectiveConfig() {
   const cfg = config.load();
   if (!cfg.activeSkin) return cfg;
 
-  const skin = skins.getSkin(cfg.activeSkin);
+  const skin = findSkin(cfg.activeSkin);
   if (!skin) {
     // 스킨 폴더가 사라졌으면 참조를 지운다(설정에도 반영해 다음부터 다시 찾지 않도록)
     config.save({ activeSkin: null });
@@ -52,6 +53,15 @@ function effectiveConfig() {
   if (skin.phrases) cfg.phrases = skin.phrases;
   cfg.bubble = skin.bubble || null;
   return cfg;
+}
+
+// 로컬 스킨 + 구독한 창작마당 스킨을 한 목록으로 (창작마당 id 는 'ws:' 로 구분)
+function allSkins() {
+  return [...skins.listSkins(), ...steam.listWorkshopSkins()];
+}
+
+function findSkin(id) {
+  return steam.isWorkshopId(id) ? steam.getWorkshopSkin(id) : skins.getSkin(id);
 }
 
 function sendConfigToDuck() {
@@ -157,7 +167,7 @@ function setMoveMode(on) {
 
 // 설치된 스킨을 순환(직접 설정 → 스킨1 → 스킨2 → …)
 function cycleSkin() {
-  const ids = [null, ...skins.listSkins().map((s) => s.id)];
+  const ids = [null, ...allSkins().map((s) => s.id)];
   if (ids.length <= 1) return;
   const idx = Math.max(0, ids.indexOf(config.load().activeSkin));
   setActiveSkin(ids[(idx + 1) % ids.length]);
@@ -248,7 +258,13 @@ ipcMain.handle('save-config', (_e, cfg) => {
   return saved;
 });
 
-ipcMain.handle('get-skins', () => ({ skins: skins.listSkins(), activeSkin: config.load().activeSkin }));
+ipcMain.handle('get-skins', () => ({
+  skins: allSkins(),
+  activeSkin: config.load().activeSkin,
+  steam: steam.status()
+}));
+
+ipcMain.handle('publish-skin', (_e, id) => steam.publishSkin(id));
 ipcMain.handle('set-active-skin', (_e, id) => setActiveSkin(id));
 
 ipcMain.handle('import-skin', async () => {
@@ -257,6 +273,7 @@ ipcMain.handle('import-skin', async () => {
 });
 
 ipcMain.handle('delete-skin', (_e, id) => {
+  if (steam.isWorkshopId(id)) return false; // 구독 해제는 스팀에서 한다
   const ok = skins.deleteSkin(id);
   if (config.load().activeSkin === id) setActiveSkin(null);
   return ok;
@@ -292,6 +309,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    steam.init(); // 스팀/AppID 없으면 false, 앱은 그대로 동작
     syncLaunchAtLogin();
     createDuckWindow();
     buildTray();

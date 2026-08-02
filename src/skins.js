@@ -156,10 +156,11 @@ function importSkin(zipPath) {
   return { ok: true, id: manifest.id, name: manifest.name };
 }
 
-/** 스킨 하나의 메타(절대경로 포함). 없으면 null */
-function getSkin(id) {
-  if (!SKIN_ID.test(String(id || ''))) return null;
-  const dir = path.join(skinsDir(), id);
+/**
+ * 폴더 하나를 스킨으로 읽는다. 창작마당에서 받은 폴더도 같은 검증을 거친다
+ * (스팀에서 왔다고 신뢰하지 않는다). overrideId 를 주면 그 id 로 노출한다.
+ */
+function readSkinFolder(dir, overrideId) {
   const manPath = path.join(dir, 'skin.json');
   if (!fs.existsSync(manPath)) return null;
   let m;
@@ -169,20 +170,29 @@ function getSkin(id) {
     return null;
   }
   const imgRel = safeRelPath(m.character.image);
-  const meta = {
-    id: m.id,
+  const soundRel = m.sound ? safeRelPath(m.sound.file) : null;
+  const imagePath = imgRel ? path.join(dir, imgRel) : null;
+  if (!imagePath || !fs.existsSync(imagePath)) return null;
+
+  return {
+    id: overrideId || m.id,
     name: m.name,
     author: m.author,
     version: m.version,
     size: m.character.size,
-    imagePath: imgRel ? path.join(dir, imgRel) : null,
-    soundPath: m.sound ? path.join(dir, safeRelPath(m.sound.file)) : null,
+    dir,
+    imagePath,
+    soundPath: soundRel ? path.join(dir, soundRel) : null,
     volume: m.sound ? m.sound.volume : null,
     phrases: m.phrases || null,
     bubble: m.bubble || null
   };
-  if (!meta.imagePath || !fs.existsSync(meta.imagePath)) return null;
-  return meta;
+}
+
+/** 설치된 스킨 하나의 메타(절대경로 포함). 없으면 null */
+function getSkin(id) {
+  if (!SKIN_ID.test(String(id || ''))) return null;
+  return readSkinFolder(path.join(skinsDir(), id));
 }
 
 function listSkins() {
@@ -204,4 +214,4 @@ function deleteSkin(id) {
   }
 }
 
-module.exports = { importSkin, listSkins, getSkin, deleteSkin };
+module.exports = { importSkin, listSkins, getSkin, deleteSkin, readSkinFolder, skinsDir };
