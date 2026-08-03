@@ -3,13 +3,12 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, dialog, screen, nativeImage, sh
 const path = require('path');
 const config = require('./config');
 const skins = require('./skins');
-const steam = require('./steam');
 
 const REPO_URL = 'https://github.com/nohseongmin/rubber-duck-debugger';
 
 const DUCK_W = 240;
 const DUCK_H = 220;
-const SCREEN_MARGIN = 24;   // 기본 위치를 작업영역 모서리에서 띄우는 여백
+const SCREEN_MARGIN = 24;   // gap from the corner of the work area for the default position
 const SETTINGS_W = 480;
 const SETTINGS_H = 700;
 
@@ -30,17 +29,18 @@ let tray = null;
 let isQuitting = false;
 let moveMode = false;
 
-// ---- 설정 ----
+// ---- Settings ----
 
-// 저장된 설정 위에 활성 스킨을 덮어, 렌더러가 그대로 쓸 수 있는 형태로 반환한다.
-// (렌더러는 character/sound/phrases 만 알면 되므로 스킨 개념이 렌더러로 새지 않는다)
+// Overlay the active skin on the stored settings so the renderer gets something it
+// can use directly. It only knows about character/sound/phrases — the idea of a
+// "skin" never leaks into it.
 function effectiveConfig() {
   const cfg = config.load();
   if (!cfg.activeSkin) return cfg;
 
-  const skin = findSkin(cfg.activeSkin);
+  const skin = skins.getSkin(cfg.activeSkin);
   if (!skin) {
-    // 스킨 폴더가 사라졌으면 참조를 지운다(설정에도 반영해 다음부터 다시 찾지 않도록)
+    // the folder is gone; drop the reference so we stop looking for it
     config.save({ activeSkin: null });
     cfg.activeSkin = null;
     return cfg;
@@ -55,21 +55,12 @@ function effectiveConfig() {
   return cfg;
 }
 
-// 로컬 스킨 + 구독한 창작마당 스킨을 한 목록으로 (창작마당 id 는 'ws:' 로 구분)
-function allSkins() {
-  return [...skins.listSkins(), ...steam.listWorkshopSkins()];
-}
-
-function findSkin(id) {
-  return steam.isWorkshopId(id) ? steam.getWorkshopSkin(id) : skins.getSkin(id);
-}
-
 function sendConfigToDuck() {
   if (duckWin) duckWin.webContents.send('config', effectiveConfig());
 }
 
-// 자동 실행은 OS 쪽이 실제 상태다. 시작할 때 설정을 OS 기준으로 맞춰,
-// 사용자가 윈도우 시작프로그램에서 직접 껐을 때 체크박스가 거짓말하지 않게 한다.
+// The OS is the source of truth for launch-at-login. Sync our setting from it on
+// startup so the checkbox doesn't lie after someone turns it off in Windows.
 function syncLaunchAtLogin() {
   const actual = app.getLoginItemSettings().openAtLogin;
   if (config.load().launchAtLogin !== actual) config.save({ launchAtLogin: actual });
@@ -81,7 +72,7 @@ function setActiveSkin(id) {
   return saved.activeSkin;
 }
 
-// ---- 창 ----
+// ---- Windows ----
 function createDuckWindow() {
   const cfg = config.load();
   const { workArea } = screen.getPrimaryDisplay();
@@ -108,7 +99,7 @@ function createDuckWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       autoplayPolicy: 'no-user-gesture-required',
-      backgroundThrottling: false // 포커스 없어도 대기 부유 애니메이션 계속 재생
+      backgroundThrottling: false // keep the idle bob running while unfocused
     }
   });
 
@@ -116,7 +107,7 @@ function createDuckWindow() {
   duckWin.loadFile(path.join(__dirname, 'duck', 'index.html'));
 
   duckWin.webContents.on('did-finish-load', () => {
-    // 시작은 클릭 투과(마우스가 오리 위로 오면 렌더러가 해제 요청)
+    // start click-through; the renderer asks us to turn it off over the duck
     duckWin.setIgnoreMouseEvents(true, { forward: true });
     sendConfigToDuck();
   });
@@ -126,7 +117,8 @@ function createDuckWindow() {
 
 function openSettings() {
   if (settingsWin) { settingsWin.focus(); return; }
-  // 설정 중에는 전역 단축키를 해제해야 단축키 캡처가 창에 정상 전달된다(창 닫힐 때 재등록).
+  // Release global hotkeys while settings is open, otherwise capturing a new one
+  // gets swallowed. They are registered again when the window closes.
   globalShortcut.unregisterAll();
   settingsWin = new BrowserWindow({
     width: SETTINGS_W,
@@ -141,7 +133,7 @@ function openSettings() {
   settingsWin.on('closed', () => { settingsWin = null; applyHotkeys(); });
 }
 
-// ---- 액션 ----
+// ---- Actions ----
 function quackNow() {
   if (duckWin) duckWin.webContents.send('quack');
 }
@@ -151,30 +143,30 @@ function quitApp() {
   app.quit();
 }
 
-// 위치 이동 모드: 창 전체를 잡을 수 있게 하고 렌더러에 알린다
+// Move mode: make the whole window grabbable and tell the renderer.
 function setMoveMode(on) {
   moveMode = on;
   if (!duckWin) return;
   if (on) {
-    duckWin.show(); // 숨긴 상태였다면 옮길 수 있게 다시 띄운다
+    duckWin.show(); // if it was hidden, bring it back so there is something to drag
     duckWin.setIgnoreMouseEvents(false);
-    duckWin.focus(); // Esc 입력을 받기 위해
+    duckWin.focus(); // so it can receive Esc
   } else {
     duckWin.setIgnoreMouseEvents(true, { forward: true });
   }
   duckWin.webContents.send('move-mode', on);
 }
 
-// 설치된 스킨을 순환(직접 설정 → 스킨1 → 스킨2 → …)
+// Cycle through the skins: own settings -> skin 1 -> skin 2 -> ...
 function cycleSkin() {
-  const ids = [null, ...allSkins().map((s) => s.id)];
+  const ids = [null, ...skins.listSkins().map((s) => s.id)];
   if (ids.length <= 1) return;
   const idx = Math.max(0, ids.indexOf(config.load().activeSkin));
   setActiveSkin(ids[(idx + 1) % ids.length]);
 }
 
-// 창의 실제 표시 상태를 기준으로 토글한다(별도 플래그를 두면 다른 경로로
-// show() 된 뒤 한 번 헛도는 문제가 생긴다)
+// Toggle from the window's real visibility. A separate flag goes out of sync as
+// soon as something else calls show(), and then the hotkey does nothing once.
 function toggleHide() {
   if (!duckWin) return;
   if (duckWin.isVisible()) duckWin.hide();
@@ -188,7 +180,7 @@ const ACTIONS = {
   'open-settings': openSettings
 };
 
-// 전역 단축키 등록(설정의 hotkeys 배열 기준: 키 조합 ↔ 액션)
+// Register the global hotkeys listed in the settings (key combo -> action).
 function applyHotkeys() {
   globalShortcut.unregisterAll();
   for (const hk of config.load().hotkeys || []) {
@@ -204,7 +196,7 @@ function applyHotkeys() {
   }
 }
 
-// ---- 메뉴 ----
+// ---- Menus ----
 const githubItem = { label: '🦆 Rubber Duck Debugger on GitHub', click: () => shell.openExternal(REPO_URL) };
 
 function buildTray() {
@@ -253,18 +245,12 @@ ipcMain.handle('save-config', (_e, cfg) => {
     duckWin.setAlwaysOnTop(saved.alwaysOnTop);
     sendConfigToDuck();
   }
-  // 설정창이 열려 있는 동안엔 캡처를 위해 재등록을 미룬다(창 닫힐 때 applyHotkeys)
+  // While settings is open, hold off re-registering so key capture keeps working
   if (!settingsWin) applyHotkeys();
   return saved;
 });
 
-ipcMain.handle('get-skins', () => ({
-  skins: allSkins(),
-  activeSkin: config.load().activeSkin,
-  steam: steam.status()
-}));
-
-ipcMain.handle('publish-skin', (_e, id) => steam.publishSkin(id));
+ipcMain.handle('get-skins', () => ({ skins: skins.listSkins(), activeSkin: config.load().activeSkin }));
 ipcMain.handle('set-active-skin', (_e, id) => setActiveSkin(id));
 
 ipcMain.handle('import-skin', async () => {
@@ -273,7 +259,6 @@ ipcMain.handle('import-skin', async () => {
 });
 
 ipcMain.handle('delete-skin', (_e, id) => {
-  if (steam.isWorkshopId(id)) return false; // 구독 해제는 스팀에서 한다
   const ok = skins.deleteSkin(id);
   if (config.load().activeSkin === id) setActiveSkin(null);
   return ok;
@@ -300,7 +285,7 @@ ipcMain.on('test-quack', quackNow);
 ipcMain.on('show-duck-menu', popupDuckMenu);
 ipcMain.on('exit-move-mode', () => setMoveMode(false));
 
-// ---- 앱 수명주기 ----
+// ---- App lifecycle ----
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
@@ -309,7 +294,6 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
-    steam.init(); // 스팀/AppID 없으면 false, 앱은 그대로 동작
     syncLaunchAtLogin();
     createDuckWindow();
     buildTray();
@@ -319,7 +303,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on('will-quit', () => globalShortcut.unregisterAll());
 
-  // 트레이 상주 앱: 창이 닫혀도 종료하지 않는다(트레이/메뉴의 '종료'로만 끝냄)
+  // This lives in the tray: closing the windows must not quit it. Only Quit does.
   app.on('window-all-closed', () => {
     if (isQuitting && process.platform !== 'darwin') app.quit();
   });

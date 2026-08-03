@@ -1,7 +1,5 @@
 # Rubber Duck Debugger 🦆
 
-<p align="center"><b>English</b> | <a href="README.ko.md">한국어</a></p>
-
 <p align="center">
   <img src="assets/demo.gif" alt="Clicking the duck makes it quack" width="480">
 </p>
@@ -104,7 +102,7 @@ The app has no network code at all — no account, no telemetry, nothing sent an
 ## Roadmap
 
 - More than one duck at a time
-- A Steam release with Workshop support, so skins can be shared properly instead of passed around as files
+- A gallery of community skin packs, so they're easier to find than "someone posted a zip"
 - Auto-update, and a signed build so Windows stops complaining
 
 ## License

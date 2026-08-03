@@ -1,7 +1,7 @@
 {
   "name": "rubber-duck-debugger",
-  "version": "0.5.0",
-  "description": "바탕화면 러버덕 디버깅 위젯 — 클릭하면 꽥! 이미지·소리·문구 커스텀.",
+  "version": "1.0.0",
+  "description": "A rubber duck that lives on your desktop and quacks when you click it.",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -23,8 +23,7 @@
       "assets/**/*"
     ],
     "asarUnpack": [
-      "assets/**/*",
-      "node_modules/steamworks.js/**/*"
+      "assets/**/*"
     ],
     "win": {
       "target": "nsis",
@@ -40,7 +39,6 @@
     }
   },
   "dependencies": {
-    "adm-zip": "^0.6.0",
-    "steamworks.js": "^0.4.0"
+    "adm-zip": "^0.6.0"
   }
 }

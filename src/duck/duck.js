@@ -1,9 +1,9 @@
 'use strict';
 
-// 내장 기본 캐릭터 이미지(투명 배경 고무오리). 문서 위치(src/duck/) 기준 상대경로.
+// The bundled character, relative to this document (src/duck/).
 const BUILTIN_DUCK = '../../assets/duck.png';
 
-// 메인이 항상 병합된 설정을 내려주므로 아래 값은 방어용 폴백이다.
+// Main always sends a fully merged config, so these are just a safety net.
 const FALLBACK = {
   size: 120,
   emoji: '🦆',
@@ -14,10 +14,10 @@ const FALLBACK = {
   bubbleText: '#222222'
 };
 
-// 자동 혼잣말 간격(초). 사용자가 더 짧게 넣어도 MIN_SEC 아래로는 내려가지 않는다.
+// Idle chatter interval in seconds; never faster than floorSec.
 const CHATTER = { minSec: 30, maxSec: 75, floorSec: 5 };
 
-// 합성 "꽥" 파라미터 — 톱니파를 밴드패스로 깎고 비브라토로 오리 특유의 버즈감을 만든다.
+// The synthesized quack: a sawtooth through a bandpass, with vibrato for the buzz.
 const QUACK = {
   durSec: 0.2,
   startHz: 500,
@@ -27,7 +27,7 @@ const QUACK = {
   filterHz: 950,
   filterQ: 5,
   attackSec: 0.02,
-  silence: 0.0001 // exponentialRamp 는 0 을 못 쓰므로 무음 대용값
+  silence: 0.0001 // exponentialRamp can't take 0, so this stands in for silence
 };
 
 const duckEl = document.getElementById('duck');
@@ -51,7 +51,7 @@ function toFileUrl(p) {
   return 'file://' + String(p).replace(/\\/g, '/');
 }
 
-// ---- 설정 적용 ----
+// ---- Applying settings ----
 function applyConfig(c) {
   cfg = c || {};
   const ch = cfg.character || {};
@@ -63,9 +63,9 @@ function applyConfig(c) {
     emojiEl.style.display = 'block';
     imgEl.style.display = 'none';
   } else {
-    // 'image'(사용자 파일/스킨) 또는 'default'(내장 오리)
+    // 'image' (a file or skin) or 'default' (the bundled duck)
     const custom = ch.type === 'image' && ch.imagePath;
-    // 같은 경로로 파일만 바뀌는 경우가 있어 캐시버스터를 붙인다
+    // the file can change while the path stays the same, hence the cache buster
     imgEl.src = custom ? toFileUrl(ch.imagePath) + '?t=' + Date.now() : BUILTIN_DUCK;
     imgEl.style.width = size + 'px';
     imgEl.style.display = 'block';
@@ -78,10 +78,10 @@ function applyConfig(c) {
   bubbleEl.style.setProperty('--bubble-bg', bubble.bgColor || FALLBACK.bubbleBg);
   bubbleEl.style.color = bubble.textColor || FALLBACK.bubbleText;
 
-  scheduleChatter(); // 설정이 바뀌면 혼잣말 주기도 다시 잡는다
+  scheduleChatter(); // settings changed, so re-time the next remark
 }
 
-// ---- 소리 ----
+// ---- Sound ----
 function playSynthQuack(volume) {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -146,7 +146,7 @@ function playQuackSound() {
   else playSynthQuack(volume);
 }
 
-// ---- 말풍선 + 꽥 ----
+// ---- Bubble and quack ----
 function showBubble() {
   const phrases = (cfg && Array.isArray(cfg.phrases) && cfg.phrases.length)
     ? cfg.phrases
@@ -162,19 +162,19 @@ function showBubble() {
 
 function playSquish() {
   duckScaleEl.classList.remove('squish');
-  void duckScaleEl.offsetWidth; // 리플로우 강제 → 애니메이션 재시작
+  void duckScaleEl.offsetWidth; // force a reflow so the animation restarts
   duckScaleEl.classList.add('squish');
 }
 
-// opts.silent = true 면 소리 없이 말풍선만(자동 혼잣말 기본 동작)
+// opts.silent skips the sound and only shows the bubble (idle chatter does this)
 function quack(opts) {
   if (!(opts && opts.silent)) playQuackSound();
   showBubble();
   playSquish();
-  scheduleChatter(); // 방금 말했으니 다음 혼잣말까지 다시 센다
+  scheduleChatter(); // it just spoke, so start counting again
 }
 
-// ---- 자동 혼잣말: 가끔 스스로 꽥 ----
+// ---- Idle chatter ----
 function scheduleChatter() {
   if (chatterTimer) { clearTimeout(chatterTimer); chatterTimer = null; }
   const idle = (cfg && cfg.idleChatter) || {};
@@ -185,22 +185,22 @@ function scheduleChatter() {
   const delayMs = (min + Math.random() * (max - min)) * 1000;
 
   chatterTimer = setTimeout(() => {
-    if (moveMode) { scheduleChatter(); return; } // 이동 중엔 건너뛴다
+    if (moveMode) { scheduleChatter(); return; } // not while it's being moved
     quack({ silent: !idle.sound });
   }, delayMs);
 }
 
-// ---- 메인 → 렌더러 ----
-window.api.onConfig(applyConfig); // 활성 스킨이 반영된 effective config
+// ---- From the main process ----
+window.api.onConfig(applyConfig); // config with the active skin already applied
 window.api.onQuack(() => quack());
 window.api.onMoveMode((on) => {
   moveMode = on;
   document.body.classList.toggle('move-mode', on);
 });
 
-// ---- 상호작용: 좌클릭=꽥 · 우클릭=메뉴 · 이동모드=드래그 ----
+// ---- Interaction: left-click quacks, right-click opens the menu, move mode drags ----
 
-// 네이티브 이미지 드래그(반투명 고스트가 따라붙는 현상) 차단
+// Block the browser's native image drag (it leaves a ghost trailing the cursor)
 window.addEventListener('dragstart', (e) => e.preventDefault());
 
 duckEl.addEventListener('click', () => { if (!moveMode) quack(); });
@@ -224,17 +224,17 @@ window.addEventListener('mousedown', async (e) => {
     const pos = await window.api.getWindowPos();
     winX = pos[0];
     winY = pos[1];
-  } catch (_) { /* 위치를 못 읽으면 이번 드래그만 포기 */ }
+  } catch (_) { /* couldn't read the position; skip this drag */ }
   e.preventDefault();
 });
 
 window.addEventListener('mousemove', (e) => {
   if (moveMode) {
-    // 이동 모드에선 창 전체가 잡히므로 투과 토글을 하지 않는다
+    // in move mode the whole window is grabbable, so leave click-through alone
     if (dragging) window.api.moveWindow(winX + (e.screenX - startSX), winY + (e.screenY - startSY));
     return;
   }
-  // 평소엔 오리 위에서만 클릭을 받고, 나머지 영역은 바탕화면으로 통과시킨다
+  // otherwise only the duck takes clicks; everything else falls through to the desktop
   const el = document.elementFromPoint(e.clientX, e.clientY);
   window.api.setMouseThrough(!(el && el.closest('#hotzone')));
 });
@@ -245,5 +245,5 @@ window.addEventListener('mouseup', async () => {
   try {
     const pos = await window.api.getWindowPos();
     window.api.savePosition(pos[0], pos[1]);
-  } catch (_) { /* 저장 실패해도 화면상 위치는 그대로 */ }
+  } catch (_) { /* failed to save; the on-screen position is still fine */ }
 });

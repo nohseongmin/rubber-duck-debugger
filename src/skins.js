@@ -1,22 +1,24 @@
 'use strict';
 /*
- * 스킨팩(.rduck/.zip) 임포트·검증·관리.
- * 스킨은 "순수 애셋"이다 — 코드 실행 없음. zip에서 화이트리스트 파일만,
- * 크기/경로/매니페스트를 검증한 뒤 userData/skins/<id>/ 로 추출한다.
+ * Importing, validating and managing skin packs (.rduck / .zip).
+ *
+ * A skin is pure assets — nothing inside a pack is ever executed. We only unpack
+ * allowlisted files, after checking their paths, sizes and the manifest, into
+ * userData/skins/<id>/.
  */
 const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const AdmZip = require('adm-zip');
 
-// ---- 보안 한계값 ----
+// ---- Limits that keep a hostile archive in check ----
 const MAX_ENTRIES = 60;
-const MAX_FILE_BYTES = 10 * 1024 * 1024;   // 파일당 10MB
-const MAX_TOTAL_BYTES = 30 * 1024 * 1024;  // 총합 30MB
+const MAX_FILE_BYTES = 10 * 1024 * 1024;   // per file
+const MAX_TOTAL_BYTES = 30 * 1024 * 1024;  // per pack
 const IMAGE_EXT = ['png', 'gif', 'apng', 'webp', 'jpg', 'jpeg', 'bmp'];
 const AUDIO_EXT = ['mp3', 'wav', 'ogg', 'm4a', 'flac'];
 const ALLOWED_EXT = new Set([...IMAGE_EXT, ...AUDIO_EXT, 'json']);
-const SKIN_ID = /^[a-z0-9][a-z0-9-]{0,63}$/; // 폴더명으로 쓰이므로 안전한 문자만
+const SKIN_ID = /^[a-z0-9][a-z0-9-]{0,63}$/; // used as a folder name, so keep it to safe characters
 
 function skinsDir() {
   const d = path.join(app.getPath('userData'), 'skins');
@@ -29,16 +31,17 @@ function ext(name) {
   return i < 0 ? '' : name.slice(i + 1).toLowerCase();
 }
 
-// zip 엔트리명 정규화 + 경로 탈출 차단
+// Normalise a zip entry name and refuse anything that escapes the target folder.
 function safeRelPath(entryName) {
   const norm = entryName.replace(/\\/g, '/');
-  if (norm.startsWith('/') || /^[a-zA-Z]:/.test(norm)) return null; // 절대경로 거부
+  if (norm.startsWith('/') || /^[a-zA-Z]:/.test(norm)) return null; // no absolute paths
   const parts = norm.split('/').filter((p) => p && p !== '.');
-  if (parts.some((p) => p === '..')) return null;                    // 상위 탈출 거부
+  if (parts.some((p) => p === '..')) return null;                    // no climbing out with ..
   return parts.join('/');
 }
 
-// 숫자가 아니면 기본값. 스킨은 남이 만든 파일이라 값 범위를 강제한다.
+// Fall back to the default when the value isn't a number. Packs come from other
+// people, so every number gets clamped to a range we can live with.
 function clamp(v, lo, hi, dflt) {
   const n = Number(v);
   if (v === null || v === undefined || v === '' || !Number.isFinite(n)) return dflt;
@@ -84,7 +87,7 @@ function normalizeManifest(m) {
   return out;
 }
 
-/** .rduck/.zip 임포트. 성공 시 {ok, id, name}, 실패 시 {ok:false, error} */
+/** Import a .rduck/.zip. Returns {ok, id, name} or {ok:false, error}. */
 function importSkin(zipPath) {
   let zip;
   try {
@@ -96,7 +99,7 @@ function importSkin(zipPath) {
   if (entries.length === 0) return { ok: false, error: 'the archive is empty' };
   if (entries.length > MAX_ENTRIES) return { ok: false, error: 'too many files in the archive' };
 
-  // 1) 매니페스트 찾기(루트 skin.json)
+  // 1) find the manifest (skin.json at the root)
   const manEntry = entries.find((e) => !e.isDirectory && safeRelPath(e.entryName) === 'skin.json');
   if (!manEntry) return { ok: false, error: 'skin.json is missing' };
   let manifest;
@@ -106,14 +109,15 @@ function importSkin(zipPath) {
     return { ok: false, error: 'bad manifest — ' + e.message };
   }
 
-  // 2) 추출할 파일 선별(화이트리스트/경로/크기 검증). 실행/미허용 파일은 스킵.
+  // 2) pick what to unpack, checking path, extension and size. Anything else
+  //    (executables, scripts, ...) is silently skipped.
   let total = 0;
   const toWrite = []; // { rel, data }
   for (const e of entries) {
     if (e.isDirectory) continue;
     const rel = safeRelPath(e.entryName);
     if (rel === null) return { ok: false, error: 'the archive contains an unsafe path' };
-    if (!ALLOWED_EXT.has(ext(rel))) continue; // 미허용 확장자는 무시(실행파일 등)
+    if (!ALLOWED_EXT.has(ext(rel))) continue; // not an allowed extension
     const size = e.header.size;
     if (size > MAX_FILE_BYTES) return { ok: false, error: 'file is too large: ' + rel };
     total += size;
@@ -121,7 +125,7 @@ function importSkin(zipPath) {
     toWrite.push({ rel, data: e.getData() });
   }
 
-  // 3) 매니페스트가 가리키는 애셋이 실제 추출 대상에 있는지
+  // 3) the files the manifest points at must actually be in the pack
   const relSet = new Set(toWrite.map((w) => w.rel));
   const imgRel = safeRelPath(manifest.character.image);
   if (!imgRel || !relSet.has(imgRel) || !IMAGE_EXT.includes(ext(imgRel))) {
@@ -134,21 +138,21 @@ function importSkin(zipPath) {
     }
   }
 
-  // 4) 대상 폴더 준비(기존 동일 id 덮어쓰기)
+  // 4) write it out, replacing any existing pack with the same id
   const dir = path.join(skinsDir(), manifest.id);
   try {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.mkdirSync(dir, { recursive: true });
     for (const w of toWrite) {
       const target = path.resolve(dir, w.rel);
-      // safeRelPath 가 이미 걸렀지만, 파일을 쓰기 직전이라 한 번 더 확인한다
+      // safeRelPath already covers this, but we check once more right before writing
       if (!target.startsWith(path.resolve(dir) + path.sep)) {
         return { ok: false, error: 'unsafe path: ' + w.rel };
       }
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, w.data);
     }
-    // 정규화된 매니페스트를 저장(원본 신뢰 안 함)
+    // store the normalised manifest rather than trusting the original
     fs.writeFileSync(path.join(dir, 'skin.json'), JSON.stringify(manifest, null, 2), 'utf-8');
   } catch (e) {
     return { ok: false, error: 'install failed — ' + e.message };
@@ -156,10 +160,7 @@ function importSkin(zipPath) {
   return { ok: true, id: manifest.id, name: manifest.name };
 }
 
-/**
- * 폴더 하나를 스킨으로 읽는다. 창작마당에서 받은 폴더도 같은 검증을 거친다
- * (스팀에서 왔다고 신뢰하지 않는다). overrideId 를 주면 그 id 로 노출한다.
- */
+/** Read a folder as a skin. Returns null if it isn't a valid pack. */
 function readSkinFolder(dir, overrideId) {
   const manPath = path.join(dir, 'skin.json');
   if (!fs.existsSync(manPath)) return null;
@@ -189,7 +190,7 @@ function readSkinFolder(dir, overrideId) {
   };
 }
 
-/** 설치된 스킨 하나의 메타(절대경로 포함). 없으면 null */
+/** Metadata for one installed skin, with absolute paths. Null if missing. */
 function getSkin(id) {
   if (!SKIN_ID.test(String(id || ''))) return null;
   return readSkinFolder(path.join(skinsDir(), id));

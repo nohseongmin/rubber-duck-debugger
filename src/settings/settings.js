@@ -1,11 +1,12 @@
 'use strict';
 
-// 이 렌더러는 preload 로 IPC(saveConfig 등)에 닿는다. 스킨 이름·작성자처럼 외부에서
-// 들어온 문자열이 섞이므로 innerHTML 을 쓰지 않고 DOM API 로만 화면을 만든다.
+// This renderer can reach IPC through the preload bridge, and it displays strings
+// that came out of someone else's skin pack (name, author). So it builds the DOM
+// with the DOM API and never touches innerHTML.
 
 const $ = (id) => document.getElementById(id);
 
-// 메인이 항상 병합된 설정을 주므로 아래는 방어용 폴백(값은 config.js DEFAULTS 와 맞춤)
+// Main always sends a merged config; these mirror config.js DEFAULTS as a safety net.
 const FALLBACK = {
   size: 120,
   emoji: '🦆',
@@ -25,7 +26,7 @@ const HK_ACTIONS = [
 const CHAR_TYPES = ['default', 'emoji', 'image'];
 
 let hotkeys = [];       // [{ accel, action }]
-let capturingRow = -1;  // 키 캡처 중인 행 index (-1 = 없음)
+let capturingRow = -1;  // index of the row waiting for a key press (-1 = none)
 let toastTimer = null;
 
 function makeEl(tag, className, text) {
@@ -47,7 +48,7 @@ function toFileUrl(p) {
   return 'file://' + String(p).replace(/\\/g, '/');
 }
 
-// 표시용: 'CommandOrControl' → 'Ctrl'
+// For display: 'CommandOrControl' -> 'Ctrl'
 function accelLabel(accel) {
   return accel ? accel.replace('CommandOrControl', 'Ctrl') : '';
 }
@@ -60,7 +61,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
 }
 
-// ---- 설정 → 화면 ----
+// ---- Settings into the form ----
 function fill(cfg) {
   const ch = cfg.character || {};
   checkRadio('charType', CHAR_TYPES.includes(ch.type) ? ch.type : 'default');
@@ -98,9 +99,9 @@ function fill(cfg) {
   renderPreview();
 }
 
-// ---- 화면 → 설정 ----
-// 이 창이 다루는 값만 보낸다. 나머지(위치·활성 스킨 등)는 메인이 저장본 위에 병합하므로
-// 설정창을 열어둔 사이 오리를 옮겨도 그 위치가 되돌아가지 않는다.
+// ---- The form back into settings ----
+// Only the values this window owns. Main merges them onto what is stored, so moving
+// the duck while this window is open won't get undone by pressing Save.
 function collect() {
   return {
     character: {
@@ -149,7 +150,7 @@ function renderPreview() {
   box.appendChild(img);
 }
 
-// ---- 단축키(키 ↔ 액션) ----
+// ---- Hotkeys (key combo -> action) ----
 function keyName(e) {
   const k = e.key;
   if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(k)) return null;
@@ -203,7 +204,7 @@ function renderHotkeys() {
 
 $('hotkeyAdd').addEventListener('click', () => {
   hotkeys.push({ accel: '', action: 'quack' });
-  capturingRow = hotkeys.length - 1; // 새 행은 바로 캡처 대기
+  capturingRow = hotkeys.length - 1; // the new row waits for a key straight away
   renderHotkeys();
 });
 
@@ -219,14 +220,14 @@ window.addEventListener('keydown', (e) => {
   if (e.shiftKey) mods.push('Shift');
 
   const name = keyName(e);
-  if (!name) return;                                   // 수식키만 눌림 → 계속 대기
-  if (mods.length === 0 && name.length === 1) return;  // 단일 문자키는 수식키 필요
+  if (!name) return;                                   // modifiers only, keep waiting
+  if (mods.length === 0 && name.length === 1) return;  // a bare letter needs a modifier
   if (hotkeys[capturingRow]) hotkeys[capturingRow].accel = [...mods, name].join('+');
   capturingRow = -1;
   renderHotkeys();
 }, true);
 
-// ---- 스킨 ----
+// ---- Skins ----
 function skinCard(skin, activeSkin, refresh) {
   const card = makeEl('div', skin.id === activeSkin ? 'skin-card active' : 'skin-card');
   card.title = skin.name;
@@ -240,7 +241,7 @@ function skinCard(skin, activeSkin, refresh) {
   remove.type = 'button';
   remove.title = 'Remove';
   remove.addEventListener('click', async (e) => {
-    e.stopPropagation(); // 카드 클릭(적용)과 겹치지 않게
+    e.stopPropagation(); // don't also trigger the card's apply-on-click
     await window.api.deleteSkin(skin.id);
     await refresh();
     toast('Skin removed.');
@@ -255,11 +256,7 @@ function skinCard(skin, activeSkin, refresh) {
 }
 
 async function renderSkins() {
-  const { skins, activeSkin, steam } = await window.api.getSkins();
-  const steamReady = !!(steam && steam.available);
-  $('steamStatus').textContent = steamReady
-    ? 'Steam Workshop connected — subscribed skins show up here, and ↑ publishes your own.'
-    : 'Steam is not running, so Workshop skins are unavailable. Local skin packs still work.';
+  const { skins, activeSkin } = await window.api.getSkins();
 
   const active = skins.find((s) => s.id === activeSkin);
   const banner = $('skinBanner');
@@ -273,7 +270,7 @@ async function renderSkins() {
       'No skins installed yet. Use "Import skin pack" to add a .rduck file.'));
     return;
   }
-  for (const skin of skins) grid.appendChild(skinCard(skin, activeSkin, renderSkins, steamReady));
+  for (const skin of skins) grid.appendChild(skinCard(skin, activeSkin, renderSkins));
 }
 
 $('skinImport').addEventListener('click', async () => {
@@ -290,7 +287,7 @@ $('skinNone').addEventListener('click', async () => {
   toast('Back to your own settings.');
 });
 
-// ---- 입력 반응 ----
+// ---- Reacting to input ----
 ['input', 'change'].forEach((ev) => {
   ['emoji', 'size', 'imagePath'].forEach((id) => $(id).addEventListener(ev, renderPreview));
   document.querySelectorAll('input[name=charType]').forEach((el) => el.addEventListener(ev, renderPreview));
@@ -315,7 +312,7 @@ $('pickSound').addEventListener('click', async () => {
   checkRadio('soundType', 'file');
 });
 
-// ---- 저장 / 테스트 ----
+// ---- Save and test ----
 async function save() {
   await window.api.saveConfig(collect());
   toast('Saved. Quack!');

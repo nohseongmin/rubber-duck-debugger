@@ -1,7 +1,9 @@
 'use strict';
 /*
- * 스킨팩 임포트 보안 테스트 (의존성 없이 node로 실행: npm test)
- * 스킨은 남이 만든 파일을 여는 기능이라 보안 검증이 핵심이다.
+ * Skin pack import. Runs on plain node, no test framework.
+ *
+ * Importing a pack means opening a file someone else made, so most of this is
+ * about what the importer refuses to do.
  */
 const Module = require('module');
 const fs = require('fs');
@@ -13,7 +15,7 @@ const AdmZip = require('adm-zip');
 const TEST_USERDATA = path.join(os.tmpdir(), 'rdd-skins-test-' + Date.now());
 fs.mkdirSync(TEST_USERDATA, { recursive: true });
 
-// electron 스텁(app.getPath('userData'))
+// stub out electron's app.getPath('userData')
 const origLoad = Module._load;
 Module._load = function (request) {
   if (request === 'electron') return { app: { getPath: () => TEST_USERDATA } };
@@ -29,7 +31,7 @@ function check(name, cond, extra) {
 }
 
 const tmp = (n) => path.join(TEST_USERDATA, n);
-const PNG = Buffer.from('89504e470d0a1a0a', 'hex'); // PNG 시그니처(내용은 중요치 않음)
+const PNG = Buffer.from('89504e470d0a1a0a', 'hex'); // a PNG header; the contents don't matter
 
 function manifest(over) {
   return JSON.stringify(Object.assign({
@@ -46,7 +48,7 @@ function makeZip(entries, file) {
   return p;
 }
 
-// adm-zip은 addFile 시 '../'를 벗겨내므로, 진짜 zip slip 페이로드는 로컬헤더를 직접 쓴다.
+// adm-zip strips '../' in addFile, so a real zip-slip payload needs the local headers written by hand.
 function makeSlipZip(evilName, file) {
   const files = [
     { name: 'skin.json', data: Buffer.from(manifest()) },
@@ -85,7 +87,7 @@ function makeSlipZip(evilName, file) {
   return p;
 }
 
-// zlib.crc32은 node 20.12+ / 폴백
+// zlib.crc32 needs node 20.12+, so keep a fallback
 function crc32(buf) {
   let c = ~0;
   for (let i = 0; i < buf.length; i++) {
@@ -95,72 +97,72 @@ function crc32(buf) {
   return ~c >>> 0;
 }
 
-console.log('\n[1] 정상 스킨팩');
+console.log('\n[1] a well-formed pack');
 {
   const p = makeZip([['skin.json', manifest({
-    phrases: ['삑!', '한 줄씩'], bubble: { textColor: '#111111', bgColor: '#ffe3f1' }
+    phrases: ['Squeak!', 'line by line'], bubble: { textColor: '#111111', bgColor: '#ffe3f1' }
   })], ['char.png', PNG]], 'good.rduck');
   const r = skins.importSkin(p);
-  check('임포트 성공', r.ok === true, r);
+  check('imports', r.ok === true, r);
   const m = skins.getSkin('test-skin');
-  check('메타 조회', !!m);
-  check('이미지 실제 존재', m && fs.existsSync(m.imagePath));
-  check('사운드 없음 → null(합성음 폴백)', m && m.soundPath === null);
-  check('문구 반영', m && m.phrases && m.phrases.length === 2);
-  check('말풍선 색 통과', m && m.bubble && m.bubble.bgColor === '#ffe3f1');
-  check('listSkins 포함', skins.listSkins().some((s) => s.id === 'test-skin'));
+  check('metadata reads back', !!m);
+  check('the image really landed on disk', m && fs.existsSync(m.imagePath));
+  check('no sound means null, so the synth quack is used', m && m.soundPath === null);
+  check('phrases came through', m && m.phrases && m.phrases.length === 2);
+  check('bubble colour accepted', m && m.bubble && m.bubble.bgColor === '#ffe3f1');
+  check('shows up in listSkins', skins.listSkins().some((s) => s.id === 'test-skin'));
 }
 
-console.log('\n[2] zip slip (경로 탈출) 거부');
+console.log('\n[2] rejects zip slip (paths that escape the folder)');
 {
   const p1 = makeSlipZip('../../../evil.png', 'slip1.rduck');
   const r1 = skins.importSkin(p1);
-  check('상위경로(../) 거부', r1.ok === false, r1);
-  check('탈출 파일 미생성', !fs.existsSync(path.resolve(TEST_USERDATA, '../../../evil.png')));
+  check('refuses ../', r1.ok === false, r1);
+  check('nothing was written outside', !fs.existsSync(path.resolve(TEST_USERDATA, '../../../evil.png')));
 
   const p2 = makeSlipZip('/abs/evil2.png', 'slip2.rduck');
   const r2 = skins.importSkin(p2);
-  check('절대경로 거부', r2.ok === false, r2);
+  check('refuses absolute paths', r2.ok === false, r2);
 }
 
-console.log('\n[3] 실행/스크립트 파일은 추출 안 됨');
+console.log('\n[3] never unpacks executables or scripts');
 {
   const p = makeZip([['skin.json', manifest()], ['char.png', PNG],
     ['evil.exe', 'MZ'], ['payload.js', 'alert(1)'], ['page.html', '<script>']], 'exe.rduck');
   const r = skins.importSkin(p);
-  check('임포트는 성공(미허용은 스킵)', r.ok === true, r);
+  check('import still succeeds, skipping what it will not take', r.ok === true, r);
   const dir = path.join(TEST_USERDATA, 'skins', 'test-skin');
-  check('.exe 미추출', !fs.existsSync(path.join(dir, 'evil.exe')));
-  check('.js 미추출', !fs.existsSync(path.join(dir, 'payload.js')));
-  check('.html 미추출', !fs.existsSync(path.join(dir, 'page.html')));
-  check('이미지는 추출됨', fs.existsSync(path.join(dir, 'char.png')));
+  check('.exe not written', !fs.existsSync(path.join(dir, 'evil.exe')));
+  check('.js not written', !fs.existsSync(path.join(dir, 'payload.js')));
+  check('.html not written', !fs.existsSync(path.join(dir, 'page.html')));
+  check('the image is written', fs.existsSync(path.join(dir, 'char.png')));
 }
 
-console.log('\n[4] 용량 폭탄 거부');
+console.log('\n[4] rejects oversized payloads');
 {
   const big = Buffer.alloc(11 * 1024 * 1024, 0);
   const p = makeZip([['skin.json', manifest()], ['char.png', PNG], ['big.png', big]], 'bomb.rduck');
-  check('파일당 상한 초과 거부', skins.importSkin(p).ok === false);
+  check('a file over the per-file limit is refused', skins.importSkin(p).ok === false);
 }
 
-console.log('\n[5] 매니페스트 검증');
+console.log('\n[5] manifest validation');
 {
-  check('skin.json 없음 거부', skins.importSkin(makeZip([['char.png', PNG]], 'noman.rduck')).ok === false);
-  check('불량 id 거부', skins.importSkin(makeZip([['skin.json', manifest({ id: '../evil' })], ['char.png', PNG]], 'badid.rduck')).ok === false);
-  check('없는 이미지 참조 거부', skins.importSkin(makeZip([['skin.json', manifest({ character: { image: 'nope.png' } })], ['char.png', PNG]], 'miss.rduck')).ok === false);
+  check('missing skin.json', skins.importSkin(makeZip([['char.png', PNG]], 'noman.rduck')).ok === false);
+  check('bad id', skins.importSkin(makeZip([['skin.json', manifest({ id: '../evil' })], ['char.png', PNG]], 'badid.rduck')).ok === false);
+  check('manifest points at a file that is not there', skins.importSkin(makeZip([['skin.json', manifest({ character: { image: 'nope.png' } })], ['char.png', PNG]], 'miss.rduck')).ok === false);
 
   const p = makeZip([['skin.json', manifest({ bubble: { bgColor: 'red; background:url(evil)' } })], ['char.png', PNG]], 'css.rduck');
   const r = skins.importSkin(p);
   const m = r.ok ? skins.getSkin('test-skin') : null;
-  check('CSS 인젝션 색상 제거', r.ok && (!m.bubble || !m.bubble.bgColor), m && m.bubble);
+  check('a colour that is really css gets dropped', r.ok && (!m.bubble || !m.bubble.bgColor), m && m.bubble);
 }
 
-console.log('\n[6] 삭제');
+console.log('\n[6] deleting');
 {
   check('deleteSkin', skins.deleteSkin('test-skin') === true);
-  check('삭제 후 목록에서 사라짐', !skins.listSkins().some((s) => s.id === 'test-skin'));
+  check('gone from the list afterwards', !skins.listSkins().some((s) => s.id === 'test-skin'));
 }
 
-console.log(`\n결과: ${pass} pass / ${fail} fail\n`);
+console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(TEST_USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);

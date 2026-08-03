@@ -2,7 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
-  // 렌더러 → 메인 (요청/응답)
+  // renderer -> main (request/response)
   getConfig: () => ipcRenderer.invoke('get-config'),
   saveConfig: (cfg) => ipcRenderer.invoke('save-config', cfg),
   getWindowPos: () => ipcRenderer.invoke('get-window-pos'),
@@ -11,9 +11,8 @@ contextBridge.exposeInMainWorld('api', {
   importSkin: () => ipcRenderer.invoke('import-skin'),
   setActiveSkin: (id) => ipcRenderer.invoke('set-active-skin', id),
   deleteSkin: (id) => ipcRenderer.invoke('delete-skin', id),
-  publishSkin: (id) => ipcRenderer.invoke('publish-skin', id),
 
-  // 렌더러 → 메인 (단방향)
+  // renderer -> main (fire and forget)
   moveWindow: (x, y) => ipcRenderer.send('move-window', x, y),
   savePosition: (x, y) => ipcRenderer.send('save-position', x, y),
   setMouseThrough: (through) => ipcRenderer.send('set-mouse-through', through),
@@ -22,7 +21,7 @@ contextBridge.exposeInMainWorld('api', {
   showDuckMenu: () => ipcRenderer.send('show-duck-menu'),
   exitMoveMode: () => ipcRenderer.send('exit-move-mode'),
 
-  // 메인 → 렌더러 (구독)
+  // main -> renderer (subscriptions)
   onConfig: (cb) => ipcRenderer.on('config', (_e, cfg) => cb(cfg)),
   onQuack: (cb) => ipcRenderer.on('quack', () => cb()),
   onMoveMode: (cb) => ipcRenderer.on('move-mode', (_e, on) => cb(on))
