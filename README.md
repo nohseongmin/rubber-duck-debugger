@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  A rubber duck that lives on your desktop and quacks when you click it.<br>
-  Transparent, always on top, and you can swap the duck out for any image, GIF, sound or set of phrases.
+  A rubber duck that sits on your desktop and quacks when you click it.<br>
+  Transparent, always on top, and you can swap it for any image, GIF, sound or set of phrases.
 </p>
 
 <p align="center">
@@ -21,25 +21,25 @@
   <sub>One installer. No Node, no build step.</sub>
 </p>
 
-Rubber duck debugging is the old habit of explaining your broken code out loud, one line at a time, to a rubber duck — and finding the bug yourself somewhere in the middle of the explanation. This is that duck. It doesn't understand a word you say, but it sits there and it quacks.
+Rubber duck debugging is the old trick of explaining your broken code out loud, line by line, to a rubber duck, and working out the answer yourself somewhere in the middle of it. This is the duck. It doesn't understand any of what you say. It just quacks.
 
 ## What it does
 
-The duck sits on top of your other windows with a transparent background, so there's no window frame around it — just a duck on your desktop. Click it and it quacks, squishes, and says something in a speech bubble. Left alone it drifts slowly up and down, and now and then it pipes up on its own. That one is silent by default; a bubble appears but nothing interrupts you.
+The window is transparent and stays on top, so there's no frame around the duck. Click it and it quacks, squishes, and pops up a speech bubble with one of your lines. Leave it alone and it drifts up and down, and every so often it says something by itself. That one is silent by default, so it won't cut across whatever you're doing.
 
-The rest of the window is click-through, so your desktop icons keep working as if it weren't there.
+Everything except the duck is click-through. Your desktop icons carry on working as if it weren't there.
 
-Moving the duck is a separate mode, deliberately. Right-click it, pick Move, and a dashed outline appears — drag it where you want, then hit Done or Esc. In the first version a click and a drag were told apart by how far the mouse travelled, which meant half your quacks were swallowed by an accidental drag. Splitting the two fixed that.
+Moving it is its own mode, on purpose. Right-click, pick Move, and a dashed outline appears; drag the duck somewhere else, then press Done or Esc. The first version told a click from a drag by how far the mouse had travelled, and it ate about half the quacks. Separating the two fixed it.
 
-Global hotkeys can trigger a quack, cycle to the next skin, hide or show the duck, or open settings, and they fire while another app has focus. None are set up front — the app shouldn't take a shortcut you were already using, so you pick them yourself.
+Global hotkeys can quack, switch to the next skin, hide the duck or open settings, and they work while another app has focus. Nothing is bound to begin with. You pick the keys, so the app can't quietly take a shortcut you were already using.
 
 ## Install
 
-1. Download **[RubberDuckDebugger-Setup.exe](https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe)** and run it.
-2. Windows will warn you about an unknown publisher. The build isn't code-signed yet, so that's expected — click **More info → Run anyway**.
-3. The duck shows up in the bottom-right corner. Left-click it to hear it. Right-click, or use the tray icon, for settings and quit.
+1. Grab **[RubberDuckDebugger-Setup.exe](https://github.com/nohseongmin/rubber-duck-debugger/releases/latest/download/RubberDuckDebugger-Setup.exe)** and run it.
+2. Windows will complain about an unknown publisher, because the build isn't signed. Click **More info → Run anyway**.
+3. The duck turns up in the bottom-right corner. Left-click to hear it. Right-click it, or use the tray icon, for settings and quit.
 
-Windows x64 for now. New versions go up on the [releases page](https://github.com/nohseongmin/rubber-duck-debugger/releases); there's no auto-update yet.
+Windows x64 only for now. Later versions go up on the [releases page](https://github.com/nohseongmin/rubber-duck-debugger/releases); there's no auto-update yet.
 
 ## Settings
 
@@ -47,7 +47,7 @@ Windows x64 for now. New versions go up on the [releases page](https://github.co
   <img src="assets/shot-settings.png" alt="The settings window" width="820">
 </p>
 
-One window, no tabs. Pick the character — the bundled duck, an emoji, or your own image or GIF — and set how big it is. Type the lines you want it to say, one per line, and it picks one at random each time. Swap the quack for your own sound file, decide how often the duck talks to itself, and turn the idle bobbing off if it distracts you. There's a switch to start it with Windows, off unless you ask.
+One window, no tabs. Choose the character (the bundled duck, an emoji, or your own image or GIF) and how big it should be. Write the lines it says, one per line, and it picks one at random. You can replace the quack with your own sound file, set how often the duck talks to itself, and switch off the idle bobbing if it distracts you. Starting with Windows is in there too, off unless you turn it on.
 
 ## Skin packs
 
@@ -55,9 +55,9 @@ One window, no tabs. Pick the character — the bundled duck, an emoji, or your 
   <img src="assets/shot-skins.png" alt="The bundled duck next to the Pinky Duck skin" width="820">
 </p>
 
-A skin bundles the character, the sound, the phrases and the bubble colours into one file, so switching the whole look is a single click instead of six settings. The sample pack in [`skins/`](skins/) is the pink duck above.
+A skin carries the character, sound, phrases and bubble colours in one file, so changing the whole look is a single click instead of six settings. The sample in [`skins/`](skins/) is the pink duck above.
 
-A pack is just a zip holding a `skin.json` and whatever that file points at, renamed to `.rduck`. Import one from Settings → Skin.
+A pack is a zip holding a `skin.json` and whatever that file points at, renamed to `.rduck`. Import it from Settings → Skin.
 
 ```
 my-skin.rduck
@@ -80,9 +80,9 @@ my-skin.rduck
 }
 ```
 
-Only `id` and `character.image` are required. Leave anything else out and the app falls back to its own defaults.
+Only `id` and `character.image` have to be there. Anything you leave out falls back to the app's own defaults.
 
-Skins are assets, not code — nothing inside a pack is ever executed. On import the archive is checked for path traversal, oversized and zip-bomb payloads and a malformed manifest, and only allowlisted image and audio files get unpacked. The checks are in [`src/skins.js`](src/skins.js) and the tests covering them are in [`test/skins.test.js`](test/skins.test.js).
+Nothing inside a pack ever runs. It's images, audio and one JSON file. Importing checks for paths that climb out of the folder, oversized files, zip bombs and a broken manifest, then unpacks only the extensions on the allowlist. That code is in [`src/skins.js`](src/skins.js), and [`test/skins.test.js`](test/skins.test.js) covers it.
 
 ## Running from source
 
@@ -93,18 +93,18 @@ npm test         # config and skin-import tests
 npm run dist     # build installers into dist/
 ```
 
-It's an Electron app: main process in `src/main.js`, the duck window in `src/duck/`, the settings window in `src/settings/`. Settings live in a JSON file under `userData/`, and imported skins unpack alongside them. The default quack is synthesized with the Web Audio API instead of being shipped as an audio file, which is why there's no sound asset in the repo.
+An Electron app: main process in `src/main.js`, duck window in `src/duck/`, settings window in `src/settings/`. Settings are a JSON file under `userData/`, and imported skins land next to it. The default quack is generated with the Web Audio API rather than shipped as audio, which is why there's no sound file in the repo.
 
 ## Privacy
 
-The app has no network code at all — no account, no telemetry, nothing sent anywhere. The renderer runs with `contextIsolation` on and `nodeIntegration` off, and it can only reach the main process through the short allowlist in `src/preload.js`. A CSP blocks it from loading anything remote.
+There's no network code in the app. No account, nothing phoned home. The renderer runs with `contextIsolation` on and `nodeIntegration` off, it can only reach the main process through the short allowlist in `src/preload.js`, and a CSP stops it loading anything remote.
 
 ## Roadmap
 
-- More than one duck at a time
-- A gallery of community skin packs, so they're easier to find than "someone posted a zip"
-- Auto-update, and a signed build so Windows stops complaining
+- More than one duck at once
+- Somewhere to find community skin packs that isn't "someone posted a zip"
+- Auto-update, and a signed build so Windows stops warning about it
 
 ## License
 
-MIT. The quack is generated in code and the duck artwork belongs to the project, so there's nothing third-party to credit here — details in [CREDITS.md](CREDITS.md).
+MIT. The quack is generated in code and the artwork belongs to the project, so there's nothing third-party to credit. Details in [CREDITS.md](CREDITS.md).

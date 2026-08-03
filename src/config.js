@@ -42,9 +42,9 @@ function deepMerge(base, over) {
     const value = over[k];
     if (value === undefined) continue;
     if (isPlainObject(value) && isPlainObject(base[k])) out[k] = deepMerge(base[k], value);
-    // A null must not wipe out an object default like character or sound — later
-    // code would crash reading it. Fields whose default IS null (position,
-    // activeSkin) have a non-object base, so they fall through and are kept.
+    // A null must not wipe out an object default like character or sound, or the
+    // code reading it later would crash. Fields whose default is itself null
+    // (position, activeSkin) have a non-object base, so they fall through.
     else if (value === null && isPlainObject(base[k])) continue;
     else out[k] = value;
   }

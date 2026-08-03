@@ -261,7 +261,7 @@ async function renderSkins() {
   const active = skins.find((s) => s.id === activeSkin);
   const banner = $('skinBanner');
   banner.hidden = !active;
-  if (active) banner.textContent = `Skin "${active.name}" is active — the character, sound and phrase settings below are ignored.`;
+  if (active) banner.textContent = `Skin "${active.name}" is active. The character, sound and phrase settings below are ignored.`;
 
   const grid = $('skinGrid');
   grid.textContent = '';

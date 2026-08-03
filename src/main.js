@@ -32,7 +32,7 @@ let moveMode = false;
 // ---- Settings ----
 
 // Overlay the active skin on the stored settings so the renderer gets something it
-// can use directly. It only knows about character/sound/phrases — the idea of a
+// can use directly. It only knows about character/sound/phrases, so the idea of a
 // "skin" never leaks into it.
 function effectiveConfig() {
   const cfg = config.load();

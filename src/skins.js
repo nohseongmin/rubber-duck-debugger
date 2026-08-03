@@ -2,7 +2,7 @@
 /*
  * Importing, validating and managing skin packs (.rduck / .zip).
  *
- * A skin is pure assets — nothing inside a pack is ever executed. We only unpack
+ * A skin is pure assets. Nothing inside a pack is ever executed: we only unpack
  * allowlisted files, after checking their paths, sizes and the manifest, into
  * userData/skins/<id>/.
  */
@@ -106,7 +106,7 @@ function importSkin(zipPath) {
   try {
     manifest = normalizeManifest(JSON.parse(manEntry.getData().toString('utf-8')));
   } catch (e) {
-    return { ok: false, error: 'bad manifest — ' + e.message };
+    return { ok: false, error: 'bad manifest: ' + e.message };
   }
 
   // 2) pick what to unpack, checking path, extension and size. Anything else
@@ -155,7 +155,7 @@ function importSkin(zipPath) {
     // store the normalised manifest rather than trusting the original
     fs.writeFileSync(path.join(dir, 'skin.json'), JSON.stringify(manifest, null, 2), 'utf-8');
   } catch (e) {
-    return { ok: false, error: 'install failed — ' + e.message };
+    return { ok: false, error: 'install failed: ' + e.message };
   }
   return { ok: true, id: manifest.id, name: manifest.name };
 }
