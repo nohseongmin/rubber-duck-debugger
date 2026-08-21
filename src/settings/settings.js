@@ -115,7 +115,7 @@ function collect() {
     sound: {
       type: checkedValue('soundType'),
       filePath: $('soundPath').value || null,
-      volume: parseFloat($('volume').value)
+      volume: parseFloat($('volume').value) || FALLBACK.volume
     },
     hotkeys: hotkeys.filter((hk) => hk.accel),
     idleChatter: {
