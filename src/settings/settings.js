@@ -157,9 +157,10 @@ function keyName(e) {
   if (k === ' ') return 'Space';
   if (k.startsWith('Arrow')) return k.slice(5); // Up/Down/Left/Right
   if (/^F([1-9]|1[0-9]|2[0-4])$/.test(k)) return k; // F1~F24
+  if (k === '+') return 'Plus'; // Electron accelerators use 'Plus' since '+' is the modifier separator
   if (k.length === 1) return k.toUpperCase();
   if (k === 'Enter') return 'Return';
-  const named = ['Home', 'End', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Backspace', 'Tab', 'Plus'];
+  const named = ['Home', 'End', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Backspace', 'Tab'];
   return named.includes(k) ? k : null;
 }
 
