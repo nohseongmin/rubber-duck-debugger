@@ -103,6 +103,8 @@ function fill(cfg) {
 // Only the values this window owns. Main merges them onto what is stored, so moving
 // the duck while this window is open won't get undone by pressing Save.
 function collect() {
+  // Guard against NaN, but keep a real 0 (dragging the slider to 0% mutes the duck).
+  const volume = parseFloat($('volume').value);
   return {
     character: {
       type: checkedValue('charType'),
@@ -115,7 +117,7 @@ function collect() {
     sound: {
       type: checkedValue('soundType'),
       filePath: $('soundPath').value || null,
-      volume: parseFloat($('volume').value) || FALLBACK.volume
+      volume: Number.isFinite(volume) ? volume : FALLBACK.volume
     },
     hotkeys: hotkeys.filter((hk) => hk.accel),
     idleChatter: {
