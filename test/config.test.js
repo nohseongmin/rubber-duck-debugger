@@ -81,6 +81,10 @@ console.log('\n[4] survives a damaged config file');
   fs.writeFileSync(CONFIG_FILE, '{ this is not json', 'utf-8');
   check('broken json falls back to defaults', config.load().idleBob === true);
 
+  writeRaw([1, 2, 3]); // valid json, but an array is not a config object
+  check('a non-object config falls back to defaults', config.load().idleBob === true);
+  check('array indices do not leak in as config keys', !('0' in config.load()), Object.keys(config.load()));
+
   writeRaw({ character: null, sound: null }); // a null here used to crash the main process
   const cfg = config.load();
   check('character default kept', cfg.character && typeof cfg.character === 'object', cfg.character);
