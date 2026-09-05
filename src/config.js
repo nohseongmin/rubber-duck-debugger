@@ -57,7 +57,9 @@ function clone(v) {
 
 // Migrate old configs: a single `hotkey` string became a `hotkeys` array.
 function migrate(p) {
-  if (!p || typeof p !== 'object') return p;
+  // Anything that isn't a plain object (an array, a string, a bare number from a
+  // hand-mangled file) has nothing to migrate; null lets load() fall back to defaults.
+  if (!isPlainObject(p)) return null;
   if (!Array.isArray(p.hotkeys) && typeof p.hotkey === 'string') {
     p.hotkeys = p.hotkey ? [{ accel: p.hotkey, action: 'quack' }] : [];
   }
