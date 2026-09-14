@@ -73,11 +73,25 @@ function setActiveSkin(id) {
 }
 
 // ---- Windows ----
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.width && a.x + a.width > b.x &&
+    a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+// A saved position can point at a monitor that is no longer connected (unplugged,
+// resolution/scaling changed, laptop undocked). Only trust it if it would still land
+// on some currently connected display.
+function isOnScreen(pos, displays) {
+  const rect = { x: pos.x, y: pos.y, width: DUCK_W, height: DUCK_H };
+  return displays.some((d) => rectsOverlap(rect, d.workArea));
+}
+
 function createDuckWindow() {
   const cfg = config.load();
   const { workArea } = screen.getPrimaryDisplay();
   const saved = cfg.position;
-  const hasSavedPos = saved && Number.isFinite(saved.x) && Number.isFinite(saved.y);
+  const hasSavedPos = saved && Number.isFinite(saved.x) && Number.isFinite(saved.y) &&
+    isOnScreen(saved, screen.getAllDisplays());
 
   duckWin = new BrowserWindow({
     width: DUCK_W,
