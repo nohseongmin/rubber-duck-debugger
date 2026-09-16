@@ -169,6 +169,7 @@ function setMoveMode(on) {
     duckWin.setIgnoreMouseEvents(true, { forward: true });
   }
   duckWin.webContents.send('move-mode', on);
+  if (tray) tray.setContextMenu(buildTrayMenu());
 }
 
 // Cycle through the skins: own settings -> skin 1 -> skin 2 -> ...
@@ -213,19 +214,25 @@ function applyHotkeys() {
 // ---- Menus ----
 const githubItem = { label: '🦆 Rubber Duck Debugger on GitHub', click: () => shell.openExternal(REPO_URL) };
 
+// Rebuilt on demand so the "Move" label always reflects the current mode, the
+// same way the duck's own right-click menu already does.
+function buildTrayMenu() {
+  return Menu.buildFromTemplate([
+    githubItem,
+    { type: 'separator' },
+    { label: 'Test quack', click: quackNow },
+    { label: moveMode ? '✓ Done moving' : 'Move', click: () => setMoveMode(!moveMode) },
+    { label: 'Settings…', click: openSettings },
+    { type: 'separator' },
+    { label: 'Quit', click: quitApp }
+  ]);
+}
+
 function buildTray() {
   const icon = nativeImage.createFromPath(TRAY_ICON);
   tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
   tray.setToolTip('Rubber Duck Debugger — click to quack');
-  tray.setContextMenu(Menu.buildFromTemplate([
-    githubItem,
-    { type: 'separator' },
-    { label: 'Test quack', click: quackNow },
-    { label: 'Move', click: () => setMoveMode(true) },
-    { label: 'Settings…', click: openSettings },
-    { type: 'separator' },
-    { label: 'Quit', click: quitApp }
-  ]));
+  tray.setContextMenu(buildTrayMenu());
   tray.on('click', quackNow);
 }
 
