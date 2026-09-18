@@ -86,8 +86,8 @@ function fill(cfg) {
 
   const idle = cfg.idleChatter || {};
   $('chatterEnabled').checked = idle.enabled !== false;
-  $('chatterMin').value = idle.minSec || FALLBACK.chatterMinSec;
-  $('chatterMax').value = idle.maxSec || FALLBACK.chatterMaxSec;
+  $('chatterMin').value = typeof idle.minSec === 'number' ? idle.minSec : FALLBACK.chatterMinSec;
+  $('chatterMax').value = typeof idle.maxSec === 'number' ? idle.maxSec : FALLBACK.chatterMaxSec;
   $('chatterSound').checked = !!idle.sound;
 
   hotkeys = (Array.isArray(cfg.hotkeys) ? cfg.hotkeys : [])
@@ -105,6 +105,10 @@ function fill(cfg) {
 function collect() {
   // Guard against NaN, but keep a real 0 (dragging the slider to 0% mutes the duck).
   const volume = parseFloat($('volume').value);
+  // Same guard: typing 0 shouldn't quietly turn into the default interval. duck.js
+  // floors the effective delay at CHATTER.floorSec, so a real 0 here is still safe.
+  const chatterMin = parseInt($('chatterMin').value, 10);
+  const chatterMax = parseInt($('chatterMax').value, 10);
   return {
     character: {
       type: checkedValue('charType'),
@@ -122,8 +126,8 @@ function collect() {
     hotkeys: hotkeys.filter((hk) => hk.accel),
     idleChatter: {
       enabled: $('chatterEnabled').checked,
-      minSec: parseInt($('chatterMin').value, 10) || FALLBACK.chatterMinSec,
-      maxSec: parseInt($('chatterMax').value, 10) || FALLBACK.chatterMaxSec,
+      minSec: Number.isFinite(chatterMin) ? chatterMin : FALLBACK.chatterMinSec,
+      maxSec: Number.isFinite(chatterMax) ? chatterMax : FALLBACK.chatterMaxSec,
       sound: $('chatterSound').checked
     },
     alwaysOnTop: $('alwaysOnTop').checked,
