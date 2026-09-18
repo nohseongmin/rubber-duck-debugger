@@ -180,8 +180,11 @@ function scheduleChatter() {
   const idle = (cfg && cfg.idleChatter) || {};
   if (!idle.enabled) return;
 
-  const min = Math.max(CHATTER.floorSec, idle.minSec || CHATTER.minSec);
-  const max = Math.max(min, idle.maxSec || CHATTER.maxSec);
+  // Guard against NaN, but keep a real 0 (the floorSec clamp below keeps it safe).
+  const minSec = Number.isFinite(idle.minSec) ? idle.minSec : CHATTER.minSec;
+  const maxSec = Number.isFinite(idle.maxSec) ? idle.maxSec : CHATTER.maxSec;
+  const min = Math.max(CHATTER.floorSec, minSec);
+  const max = Math.max(min, maxSec);
   const delayMs = (min + Math.random() * (max - min)) * 1000;
 
   chatterTimer = setTimeout(() => {
