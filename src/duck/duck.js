@@ -46,6 +46,7 @@ let moveMode = false;
 let dragging = false;
 let startSX = 0, startSY = 0;
 let winX = 0, winY = 0;
+let mouseThrough = null; // last value sent to main, so we don't re-send it on every mousemove
 
 function toFileUrl(p) {
   return 'file://' + String(p).replace(/\\/g, '/');
@@ -199,6 +200,7 @@ window.api.onQuack(() => quack());
 window.api.onMoveMode((on) => {
   moveMode = on;
   document.body.classList.toggle('move-mode', on);
+  mouseThrough = null; // main just forced the native ignore-mouse state; forget our cache
 });
 
 // ---- Interaction: left-click quacks, right-click opens the menu, move mode drags ----
@@ -239,7 +241,10 @@ window.addEventListener('mousemove', (e) => {
   }
   // otherwise only the duck takes clicks; everything else falls through to the desktop
   const el = document.elementFromPoint(e.clientX, e.clientY);
-  window.api.setMouseThrough(!(el && el.closest('#hotzone')));
+  const through = !(el && el.closest('#hotzone'));
+  if (through === mouseThrough) return; // avoid an IPC + native call on every mousemove
+  mouseThrough = through;
+  window.api.setMouseThrough(through);
 });
 
 window.addEventListener('mouseup', async () => {
