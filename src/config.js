@@ -41,6 +41,8 @@ function deepMerge(base, over) {
   for (const k of Object.keys(over)) {
     const value = over[k];
     if (value === undefined) continue;
+    // Array settings must stay iterable and support array methods in their callers.
+    if (Array.isArray(base[k]) && !Array.isArray(value)) continue;
     if (isPlainObject(value) && isPlainObject(base[k])) out[k] = deepMerge(base[k], value);
     // A null must not wipe out an object default like character or sound, or the
     // code reading it later would crash. Fields whose default is itself null

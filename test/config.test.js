@@ -104,6 +104,26 @@ console.log('\n[5] migrating the old single hotkey to the hotkeys array');
   check('empty hotkey becomes an empty array', config.load().hotkeys.length === 0);
 }
 
+console.log('\n[6] array settings reject non-array values');
+{
+  for (const value of [null, false, 42, 'invalid', {}]) {
+    writeRaw({ hotkeys: value, phrases: value, idleBob: false });
+    const cfg = config.load();
+    check('invalid hotkeys fall back to an empty array', Array.isArray(cfg.hotkeys) && cfg.hotkeys.length === 0, value);
+    check('invalid phrases fall back to defaults', JSON.stringify(cfg.phrases) === JSON.stringify(config.DEFAULTS.phrases), value);
+    check('unrelated settings survive', cfg.idleBob === false);
+
+    writeRaw({ hotkeys: [{ accel: 'Alt+Q', action: 'quack' }], phrases: ['Keep me'] });
+    config.save({ hotkeys: value, phrases: value });
+    const saved = config.load();
+    check('invalid patch preserves hotkeys', saved.hotkeys.length === 1 && saved.hotkeys[0].accel === 'Alt+Q', value);
+    check('invalid patch preserves phrases', saved.phrases.length === 1 && saved.phrases[0] === 'Keep me', value);
+  }
+  config.save({ hotkeys: [], phrases: [] });
+  const cfg = config.load();
+  check('empty arrays still clear the settings', cfg.hotkeys.length === 0 && cfg.phrases.length === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);
