@@ -87,6 +87,7 @@ function save(patch) {
     fs.writeFileSync(configPath(), JSON.stringify(merged, null, 2), 'utf-8');
   } catch (e) {
     console.error('config save failed', e);
+    throw e;
   }
   return merged;
 }
