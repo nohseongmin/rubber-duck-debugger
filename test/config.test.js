@@ -124,6 +124,21 @@ console.log('\n[6] array settings reject non-array values');
   check('empty arrays still clear the settings', cfg.hotkeys.length === 0 && cfg.phrases.length === 0);
 }
 
+console.log('\n[7] reports a failed save');
+{
+  const originalWriteFileSync = fs.writeFileSync;
+  fs.writeFileSync = () => { throw new Error('disk full'); };
+  let error;
+  try {
+    config.save({ idleBob: false });
+  } catch (e) {
+    error = e;
+  } finally {
+    fs.writeFileSync = originalWriteFileSync;
+  }
+  check('save throws the write error', error && error.message === 'disk full', error);
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);

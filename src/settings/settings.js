@@ -321,14 +321,20 @@ $('pickSound').addEventListener('click', async () => {
 
 // ---- Save and test ----
 async function save() {
-  await window.api.saveConfig(collect());
-  toast('Saved. Quack!');
+  try {
+    await window.api.saveConfig(collect());
+    toast('Saved. Quack!');
+    return true;
+  } catch (e) {
+    console.error('config save failed', e);
+    toast('Save failed.');
+    return false;
+  }
 }
 
 $('save').addEventListener('click', save);
 $('test').addEventListener('click', async () => {
-  await save();
-  window.api.testQuack();
+  if (await save()) window.api.testQuack();
 });
 
 window.api.getConfig().then(async (cfg) => {
