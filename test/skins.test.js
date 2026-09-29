@@ -143,6 +143,10 @@ console.log('\n[4] rejects oversized payloads');
   const big = Buffer.alloc(11 * 1024 * 1024, 0);
   const p = makeZip([['skin.json', manifest()], ['char.png', PNG], ['big.png', big]], 'bomb.rduck');
   check('a file over the per-file limit is refused', skins.importSkin(p).ok === false);
+
+  const manifestBomb = makeZip([['skin.json', big]], 'manifest-bomb.rduck');
+  check('an oversized manifest is refused before parsing',
+    skins.importSkin(manifestBomb).error === 'file is too large: skin.json');
 }
 
 console.log('\n[5] manifest validation');

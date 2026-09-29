@@ -102,6 +102,7 @@ function importSkin(zipPath) {
   // 1) find the manifest (skin.json at the root)
   const manEntry = entries.find((e) => !e.isDirectory && safeRelPath(e.entryName) === 'skin.json');
   if (!manEntry) return { ok: false, error: 'skin.json is missing' };
+  if (manEntry.header.size > MAX_FILE_BYTES) return { ok: false, error: 'file is too large: skin.json' };
   let manifest;
   try {
     manifest = normalizeManifest(JSON.parse(manEntry.getData().toString('utf-8')));
