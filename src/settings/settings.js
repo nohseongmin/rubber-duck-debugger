@@ -44,10 +44,6 @@ function checkedValue(name) {
   return document.querySelector(`input[name=${name}]:checked`).value;
 }
 
-function toFileUrl(p) {
-  return 'file://' + String(p).replace(/\\/g, '/');
-}
-
 // For display: 'CommandOrControl' -> 'Ctrl'
 function accelLabel(accel) {
   return accel ? accel.replace('CommandOrControl', 'Ctrl') : '';
@@ -151,7 +147,7 @@ function renderPreview() {
   const img = document.createElement('img');
   img.style.width = size + 'px';
   img.src = (type === 'image' && $('imagePath').value)
-    ? toFileUrl($('imagePath').value)
+    ? window.api.toFileUrl($('imagePath').value)
     : '../../assets/duck.png';
   box.appendChild(img);
 }
@@ -255,7 +251,7 @@ function skinCard(skin, activeSkin, refresh) {
   });
 
   const thumb = makeEl('img', 'thumb');
-  thumb.src = toFileUrl(skin.imagePath);
+  thumb.src = window.api.toFileUrl(skin.imagePath);
   thumb.alt = '';
 
   card.append(remove, thumb, makeEl('div', 'sname', skin.name), makeEl('div', 'sauth', skin.author || ''));
