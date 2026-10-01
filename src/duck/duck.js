@@ -48,10 +48,6 @@ let startSX = 0, startSY = 0;
 let winX = 0, winY = 0;
 let mouseThrough = null; // last value sent to main, so we don't re-send it on every mousemove
 
-function toFileUrl(p) {
-  return 'file://' + String(p).replace(/\\/g, '/');
-}
-
 // ---- Applying settings ----
 function applyConfig(c) {
   cfg = c || {};
@@ -67,7 +63,7 @@ function applyConfig(c) {
     // 'image' (a file or skin) or 'default' (the bundled duck)
     const custom = ch.type === 'image' && ch.imagePath;
     // the file can change while the path stays the same, hence the cache buster
-    imgEl.src = custom ? toFileUrl(ch.imagePath) + '?t=' + Date.now() : BUILTIN_DUCK;
+    imgEl.src = custom ? window.api.toFileUrl(ch.imagePath) + '?t=' + Date.now() : BUILTIN_DUCK;
     imgEl.style.width = size + 'px';
     imgEl.style.display = 'block';
     emojiEl.style.display = 'none';
@@ -129,7 +125,7 @@ function playSynthQuack(volume) {
 
 function playCustomSound(filePath, volume) {
   try {
-    const audio = new Audio(toFileUrl(filePath));
+    const audio = new Audio(window.api.toFileUrl(filePath));
     audio.volume = Math.max(0, Math.min(1, volume));
     audio.play().catch((err) => {
       console.error('custom sound failed, fallback to synth', err);

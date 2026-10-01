@@ -1,7 +1,10 @@
 'use strict';
 const { contextBridge, ipcRenderer } = require('electron');
+const { pathToFileURL } = require('url');
 
 contextBridge.exposeInMainWorld('api', {
+  toFileUrl: (filePath) => pathToFileURL(filePath).href,
+
   // renderer -> main (request/response)
   getConfig: () => ipcRenderer.invoke('get-config'),
   saveConfig: (cfg) => ipcRenderer.invoke('save-config', cfg),
