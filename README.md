@@ -87,11 +87,16 @@ Nothing inside a pack ever runs. It's images, audio and one JSON file. Importing
 ## Running from source
 
 ```bash
-npm install
+npm ci
 npm start        # run it
 npm test         # config and skin-import tests
 npm run dist     # build installers into dist/
 ```
+
+Pull requests build the Windows installer after the dependency audit and tests pass.
+For a release, update the package and lockfile versions together, then push the matching
+`vX.Y.Z` tag. GitHub Actions publishes the installer and `SHA256SUMS.txt` after verifying
+the build. Compare the downloaded installer's SHA256 with that file.
 
 An Electron app: main process in `src/main.js`, duck window in `src/duck/`, settings window in `src/settings/`. Settings are a JSON file under `userData/`, and imported skins land next to it. The default quack is generated with the Web Audio API rather than shipped as audio, which is why there's no sound file in the repo.
 
