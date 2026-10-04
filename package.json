@@ -1,6 +1,6 @@
 {
   "name": "rubber-duck-debugger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A rubber duck that lives on your desktop and quacks when you click it.",
   "main": "src/main.js",
   "scripts": {
@@ -11,8 +11,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
   },
   "build": {
     "appId": "com.rubberduck.debugger",
@@ -39,6 +39,6 @@
     }
   },
   "dependencies": {
-    "adm-zip": "^0.6.0"
+    "adm-zip": "0.6.1"
   }
 }
