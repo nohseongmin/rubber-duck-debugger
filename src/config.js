@@ -44,10 +44,9 @@ function deepMerge(base, over) {
     // Array settings must stay iterable and support array methods in their callers.
     if (Array.isArray(base[k]) && !Array.isArray(value)) continue;
     if (isPlainObject(value) && isPlainObject(base[k])) out[k] = deepMerge(base[k], value);
-    // A null must not wipe out an object default like character or sound, or the
-    // code reading it later would crash. Fields whose default is itself null
-    // (position, activeSkin) have a non-object base, so they fall through.
-    else if (value === null && isPlainObject(base[k])) continue;
+    // Invalid values must not wipe out object settings like character or sound.
+    // A null base (position, activeSkin) still accepts a new value.
+    else if (!isPlainObject(value) && isPlainObject(base[k])) continue;
     else out[k] = value;
   }
   return out;

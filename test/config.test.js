@@ -139,6 +139,32 @@ console.log('\n[7] reports a failed save');
   check('save throws the write error', error && error.message === 'disk full', error);
 }
 
+console.log('\n[8] object settings reject non-object values');
+{
+  const keys = ['character', 'sound', 'idleChatter'];
+  for (const value of [null, false, true, 42, 'invalid', []]) {
+    writeRaw({ character: value, sound: value, idleChatter: value, idleBob: false });
+    const cfg = config.load();
+    for (const key of keys) {
+      check('invalid ' + key + ' falls back to defaults',
+        JSON.stringify(cfg[key]) === JSON.stringify(config.DEFAULTS[key]), value);
+    }
+    check('unrelated settings survive', cfg.idleBob === false);
+
+    writeRaw({ character: { emoji: 'X' }, sound: { volume: 0 }, idleChatter: { enabled: false } });
+    const before = config.load();
+    const saved = config.save({ character: value, sound: value, idleChatter: value, alwaysOnTop: false });
+    const loaded = config.load();
+    for (const key of keys) {
+      check('invalid patch preserves ' + key,
+        JSON.stringify(saved[key]) === JSON.stringify(before[key]), value);
+      check('preserved ' + key + ' survives reload',
+        JSON.stringify(loaded[key]) === JSON.stringify(before[key]), value);
+    }
+    check('unrelated patch still applies', loaded.alwaysOnTop === false);
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);
