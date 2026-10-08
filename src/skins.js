@@ -89,13 +89,12 @@ function normalizeManifest(m) {
 
 /** Import a .rduck/.zip. Returns {ok, id, name} or {ok:false, error}. */
 function importSkin(zipPath) {
-  let zip;
+  let entries;
   try {
-    zip = new AdmZip(zipPath);
+    entries = new AdmZip(zipPath).getEntries();
   } catch (e) {
     return { ok: false, error: 'could not open the archive' };
   }
-  const entries = zip.getEntries();
   if (entries.length === 0) return { ok: false, error: 'the archive is empty' };
   if (entries.length > MAX_ENTRIES) return { ok: false, error: 'too many files in the archive' };
 
@@ -123,7 +122,11 @@ function importSkin(zipPath) {
     if (size > MAX_FILE_BYTES) return { ok: false, error: 'file is too large: ' + rel };
     total += size;
     if (total > MAX_TOTAL_BYTES) return { ok: false, error: 'the pack is too large overall' };
-    toWrite.push({ rel, data: e.getData() });
+    try {
+      toWrite.push({ rel, data: e.getData() });
+    } catch (e) {
+      return { ok: false, error: 'could not read file: ' + rel };
+    }
   }
 
   // 3) the files the manifest points at must actually be in the pack

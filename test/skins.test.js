@@ -167,6 +167,36 @@ console.log('\n[6] deleting');
   check('gone from the list afterwards', !skins.listSkins().some((s) => s.id === 'test-skin'));
 }
 
+console.log('\n[7] damaged archives report failure without replacing an installed skin');
+{
+  const sound = Buffer.from('quack');
+  const p = makeZip([['skin.json', manifest({ sound: { file: 'quack.wav' } })],
+    ['char.png', PNG], ['quack.wav', sound]], 'damaged.rduck');
+  check('original skin imports', skins.importSkin(p).ok === true);
+  const installed = skins.getSkin('test-skin');
+  const manifestPath = path.join(installed.dir, 'skin.json');
+  const savedManifest = fs.readFileSync(manifestPath);
+  const original = fs.readFileSync(p);
+  const zip = new AdmZip(original);
+  const cases = [
+    { name: 'directory', offset: original.indexOf(Buffer.from('504b0102', 'hex')), error: 'could not open the archive' },
+    { name: 'image', offset: zip.getEntry('char.png').header.offset, error: 'could not read file: char.png' },
+    { name: 'sound', offset: zip.getEntry('quack.wav').header.offset, error: 'could not read file: quack.wav' }
+  ];
+  for (const c of cases) {
+    const damaged = Buffer.from(original);
+    // Break a header signature while leaving the manifest and archive footer readable.
+    damaged.writeUInt32LE(0, c.offset);
+    fs.writeFileSync(p, damaged);
+    const r = skins.importSkin(p);
+    check(c.name + ' damage returns an import error', r.ok === false && r.error === c.error, r);
+    check(c.name + ' damage preserves the installed skin',
+      fs.readFileSync(manifestPath).equals(savedManifest) &&
+      fs.readFileSync(installed.imagePath).equals(PNG) &&
+      fs.readFileSync(installed.soundPath).equals(sound));
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(TEST_USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);
