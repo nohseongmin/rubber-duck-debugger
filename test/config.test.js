@@ -165,6 +165,40 @@ console.log('\n[8] object settings reject non-object values');
   }
 }
 
+console.log('\n[9] failed saves preserve the last saved settings');
+{
+  const originalWriteFileSync = fs.writeFileSync;
+  const originalRenameSync = fs.renameSync;
+  for (const stage of ['write', 'rename']) {
+    writeRaw({ idleBob: false, position: { x: 10, y: 20 } });
+    const before = fs.readFileSync(CONFIG_FILE);
+    const expectedError = new Error(stage + ' failed');
+    fs.writeFileSync = function (file, ...args) {
+      if (stage === 'write') {
+        originalWriteFileSync(file, '{ incomplete', 'utf-8');
+        throw expectedError;
+      }
+      return originalWriteFileSync(file, ...args);
+    };
+    fs.renameSync = () => { throw expectedError; };
+    let error;
+    try {
+      config.save({ idleBob: true });
+    } catch (e) {
+      error = e;
+    } finally {
+      fs.writeFileSync = originalWriteFileSync;
+      fs.renameSync = originalRenameSync;
+    }
+    check(stage + ' failure throws the original error', error === expectedError);
+    check(stage + ' failure preserves the file byte for byte', fs.readFileSync(CONFIG_FILE).equals(before));
+    const cfg = config.load();
+    check(stage + ' failure keeps the saved settings readable',
+      cfg.idleBob === false && cfg.position.x === 10 && cfg.position.y === 20);
+    check(stage + ' failure cleans up the temporary file', !fs.existsSync(CONFIG_FILE + '.tmp'));
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);

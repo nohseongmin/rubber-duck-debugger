@@ -82,9 +82,18 @@ function load() {
 // (the window position, for example, while the settings window was open).
 function save(patch) {
   const merged = deepMerge(load(), patch || {});
+  const file = configPath();
+  const temp = file + '.tmp';
   try {
-    fs.writeFileSync(configPath(), JSON.stringify(merged, null, 2), 'utf-8');
+    // Keep the last saved settings intact if writing the new ones fails.
+    fs.writeFileSync(temp, JSON.stringify(merged, null, 2), 'utf-8');
+    fs.renameSync(temp, file);
   } catch (e) {
+    try {
+      fs.rmSync(temp, { force: true });
+    } catch (cleanupError) {
+      console.error('config cleanup failed', cleanupError);
+    }
     console.error('config save failed', e);
     throw e;
   }
