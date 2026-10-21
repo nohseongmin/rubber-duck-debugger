@@ -199,6 +199,46 @@ console.log('\n[9] failed saves preserve the last saved settings');
   }
 }
 
+console.log('\n[10] boolean settings reject non-boolean values');
+{
+  const keys = ['alwaysOnTop', 'idleBob', 'launchAtLogin'];
+  for (const value of [null, 0, 1, '', 'false', [], {}]) {
+    const patch = {
+      alwaysOnTop: value, idleBob: value, launchAtLogin: value,
+      idleChatter: { enabled: value, sound: value }
+    };
+    writeRaw({ ...patch, character: { emoji: 'X' } });
+    const cfg = config.load();
+    for (const key of keys) {
+      check('invalid ' + key + ' falls back to its default', cfg[key] === config.DEFAULTS[key], value);
+    }
+    check('invalid nested booleans fall back to defaults',
+      cfg.idleChatter.enabled === true && cfg.idleChatter.sound === false, value);
+    check('unrelated settings survive', cfg.character.emoji === 'X');
+
+    writeRaw({ alwaysOnTop: false, idleBob: false, launchAtLogin: true,
+      idleChatter: { enabled: false, sound: true } });
+    const before = config.load();
+    const saved = config.save({ ...patch, character: { emoji: 'Y' } });
+    const loaded = config.load();
+    for (const key of keys) {
+      check('invalid patch preserves ' + key, saved[key] === before[key] && loaded[key] === before[key], value);
+    }
+    check('invalid patch preserves nested booleans',
+      saved.idleChatter.enabled === false && saved.idleChatter.sound === true &&
+      loaded.idleChatter.enabled === false && loaded.idleChatter.sound === true, value);
+    check('unrelated patch still applies', loaded.character.emoji === 'Y');
+  }
+  for (const value of [false, true]) {
+    config.save({ alwaysOnTop: value, idleBob: value, launchAtLogin: value,
+      idleChatter: { enabled: value, sound: value } });
+    const cfg = config.load();
+    check('valid booleans still update every setting',
+      keys.every((key) => cfg[key] === value) &&
+      cfg.idleChatter.enabled === value && cfg.idleChatter.sound === value, value);
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);
