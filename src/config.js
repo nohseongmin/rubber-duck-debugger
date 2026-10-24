@@ -43,6 +43,8 @@ function deepMerge(base, over) {
     if (value === undefined) continue;
     // Boolean settings must not pass strings or numbers to native APIs or toggles.
     if (typeof base[k] === 'boolean' && typeof value !== 'boolean') continue;
+    // Numeric settings must stay finite numbers for sizes, volume and timers.
+    if (typeof base[k] === 'number' && !Number.isFinite(value)) continue;
     // Array settings must stay iterable and support array methods in their callers.
     if (Array.isArray(base[k]) && !Array.isArray(value)) continue;
     if (isPlainObject(value) && isPlainObject(base[k])) out[k] = deepMerge(base[k], value);
