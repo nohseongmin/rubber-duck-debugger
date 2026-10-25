@@ -239,6 +239,40 @@ console.log('\n[10] boolean settings reject non-boolean values');
   }
 }
 
+console.log('\n[11] numeric settings reject non-finite and non-number values');
+{
+  for (const value of [null, false, true, '', '150', [], {}]) {
+    writeRaw({ character: { size: value }, sound: { volume: value }, bubbleDuration: value,
+      idleChatter: { minSec: value, maxSec: value }, idleBob: false });
+    const cfg = config.load();
+    check('invalid numbers fall back to defaults',
+      cfg.character.size === config.DEFAULTS.character.size && cfg.sound.volume === config.DEFAULTS.sound.volume &&
+      cfg.bubbleDuration === config.DEFAULTS.bubbleDuration &&
+      cfg.idleChatter.minSec === config.DEFAULTS.idleChatter.minSec &&
+      cfg.idleChatter.maxSec === config.DEFAULTS.idleChatter.maxSec, value);
+    check('unrelated settings survive', cfg.idleBob === false);
+  }
+  for (const value of [null, false, true, '', '150', [], {}, NaN, Infinity, -Infinity]) {
+    writeRaw({ character: { size: 150 }, sound: { volume: 0 }, bubbleDuration: 3000,
+      idleChatter: { minSec: 0, maxSec: 90 } });
+    const saved = config.save({ character: { size: value }, sound: { volume: value }, bubbleDuration: value,
+      idleChatter: { minSec: value, maxSec: value }, idleBob: false });
+    const loaded = config.load();
+    for (const cfg of [saved, loaded]) {
+      check('invalid numeric patch preserves saved numbers',
+        cfg.character.size === 150 && cfg.sound.volume === 0 && cfg.bubbleDuration === 3000 &&
+        cfg.idleChatter.minSec === 0 && cfg.idleChatter.maxSec === 90, value);
+      check('unrelated patch still applies', cfg.idleBob === false);
+    }
+  }
+  config.save({ character: { size: 180 }, sound: { volume: 0.25 }, bubbleDuration: 4000,
+    idleChatter: { minSec: 0, maxSec: 100 } });
+  const cfg = config.load();
+  check('valid numbers including zero still update every setting',
+    cfg.character.size === 180 && cfg.sound.volume === 0.25 && cfg.bubbleDuration === 4000 &&
+    cfg.idleChatter.minSec === 0 && cfg.idleChatter.maxSec === 100);
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 fs.rmSync(USERDATA, { recursive: true, force: true });
 process.exit(fail === 0 ? 0 : 1);
