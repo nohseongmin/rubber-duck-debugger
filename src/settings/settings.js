@@ -192,6 +192,7 @@ function hotkeyRow(hk, index) {
   remove.addEventListener('click', () => {
     hotkeys.splice(index, 1);
     if (capturingRow === index) capturingRow = -1;
+    else if (capturingRow > index) capturingRow--;
     renderHotkeys();
   });
 
