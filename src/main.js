@@ -281,7 +281,7 @@ ipcMain.handle('import-skin', async () => {
 
 ipcMain.handle('delete-skin', (_e, id) => {
   const ok = skins.deleteSkin(id);
-  if (config.load().activeSkin === id) setActiveSkin(null);
+  if (ok && config.load().activeSkin === id) setActiveSkin(null);
   return ok;
 });
 
