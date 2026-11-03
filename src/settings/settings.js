@@ -246,7 +246,8 @@ function skinCard(skin, activeSkin, refresh) {
   remove.title = 'Remove';
   remove.addEventListener('click', async (e) => {
     e.stopPropagation(); // don't also trigger the card's apply-on-click
-    await window.api.deleteSkin(skin.id);
+    const ok = await window.api.deleteSkin(skin.id);
+    if (!ok) { toast('Could not remove skin.'); return; }
     await refresh();
     toast('Skin removed.');
   });
