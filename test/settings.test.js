@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Hotkey capture and skin deletion. Runs on plain node, no test framework.
+ * Hotkey capture and skin management. Runs on plain node, no test framework.
  */
 const fs = require('fs');
 const path = require('path');
@@ -135,7 +135,65 @@ async function testSkinDeletion() {
   }
 }
 
-testSkinDeletion().then(() => {
+async function testSkinImport() {
+  console.log('\n[3] reimporting the active skin refreshes the duck');
+  const mainSource = fs.readFileSync(path.join(__dirname, '../src/main.js'), 'utf-8');
+  for (const outcome of ['success', 'failure', 'canceled']) {
+    for (const activeSkin of ['test-skin', 'other-skin']) {
+      const handlers = {};
+      const messages = [];
+      const cfg = { activeSkin, character: { emoji: '🦆' }, sound: { volume: 0.6 } };
+      const result = outcome === 'success'
+        ? { ok: true, id: 'test-skin', name: 'Updated' }
+        : { ok: false, error: 'bad manifest' };
+      const skin = { imagePath: 'updated.png', size: 130, phrases: ['Updated!'] };
+      let imports = 0;
+      const context = vm.createContext({
+        __dirname: path.join(__dirname, '../src'),
+        duckWindow: { webContents: { send(channel, payload) { messages.push({ channel, payload }); } } },
+        require(request) {
+          if (request === 'electron') return {
+            app: { requestSingleInstanceLock: () => false, quit() {} },
+            ipcMain: { handle(name, handler) { handlers[name] = handler; }, on() {} },
+            dialog: { showOpenDialog: async () => ({
+              canceled: outcome === 'canceled', filePaths: ['updated.rduck']
+            }) }
+          };
+          if (request === './config') return { load: () => ({ ...cfg }) };
+          if (request === './skins') return {
+            importSkin(file) {
+              check('imports the selected file', file === 'updated.rduck');
+              imports++;
+              return result;
+            },
+            getSkin: () => skin
+          };
+          return require(request);
+        }
+      });
+      vm.runInContext(mainSource, context);
+      vm.runInContext('duckWin = duckWindow;', context);
+
+      const response = await handlers['import-skin']();
+
+      const label = `import ${outcome}, active skin is ${activeSkin}: `;
+      const shouldRefresh = outcome === 'success' && activeSkin === 'test-skin';
+      check(label + 'returns the import result', outcome === 'canceled'
+        ? response.ok === false && response.canceled === true : response === result);
+      check(label + 'skips importing when canceled', imports === (outcome === 'canceled' ? 0 : 1));
+      check(label + 'refreshes only a successfully replaced active skin',
+        messages.length === (shouldRefresh ? 1 : 0));
+      if (shouldRefresh) {
+        check(label + 'sends the updated character and phrases', messages[0] &&
+          messages[0].channel === 'config' && messages[0].payload.character.imagePath === skin.imagePath &&
+          messages[0].payload.character.size === skin.size && messages[0].payload.phrases[0] === 'Updated!');
+      }
+      check(label + 'preserves the active selection', cfg.activeSkin === activeSkin);
+    }
+  }
+}
+
+testSkinDeletion().then(testSkinImport).then(() => {
   console.log(`\n${pass} passed, ${fail} failed\n`);
   process.exit(fail === 0 ? 0 : 1);
 }).catch((e) => {

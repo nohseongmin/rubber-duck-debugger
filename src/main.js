@@ -276,7 +276,9 @@ ipcMain.handle('set-active-skin', (_e, id) => setActiveSkin(id));
 
 ipcMain.handle('import-skin', async () => {
   const file = await pickPath(FILE_FILTERS.skin);
-  return file ? skins.importSkin(file) : { ok: false, canceled: true };
+  const result = file ? skins.importSkin(file) : { ok: false, canceled: true };
+  if (result.ok && result.id === config.load().activeSkin) sendConfigToDuck();
+  return result;
 });
 
 ipcMain.handle('delete-skin', (_e, id) => {
