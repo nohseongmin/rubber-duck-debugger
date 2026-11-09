@@ -57,8 +57,8 @@ for (const scenario of [
   });
 
   const add = elements.get('hotkeyAdd');
-  const list = elements.get('hotkeyList');
   for (let i = 0; i < 3; i++) add.listeners.click();
+  const list = elements.get('hotkeyList');
   listeners.keydown({ key: 'Escape', preventDefault() {}, stopPropagation() {} });
   if (scenario.capture >= 0) list.children[scenario.capture].children[1].listeners.click();
 
