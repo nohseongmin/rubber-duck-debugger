@@ -44,6 +44,7 @@ let chatterTimer = null;
 
 let moveMode = false;
 let dragging = false;
+let dragRequest = 0;
 let startSX = 0, startSY = 0;
 let winX = 0, winY = 0;
 let mouseThrough = null; // last value sent to main, so we don't re-send it on every mousemove
@@ -195,6 +196,8 @@ window.api.onConfig(applyConfig); // config with the active skin already applied
 window.api.onQuack(() => quack());
 window.api.onMoveMode((on) => {
   moveMode = on;
+  dragging = false;
+  dragRequest++;
   document.body.classList.toggle('move-mode', on);
   mouseThrough = null; // main just forced the native ignore-mouse state; forget our cache
 });
@@ -218,15 +221,21 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('mousedown', async (e) => {
   if (!moveMode || e.button !== 0) return;
-  dragging = true;
+  dragging = false;
+  const request = ++dragRequest;
   startSX = e.screenX;
   startSY = e.screenY;
+  e.preventDefault();
   try {
     const pos = await window.api.getWindowPos();
+    // A delayed reply must not restart a released, canceled or newer drag.
+    if (!moveMode || request !== dragRequest) return;
     winX = pos[0];
     winY = pos[1];
-  } catch (_) { /* couldn't read the position; skip this drag */ }
-  e.preventDefault();
+    dragging = true;
+  } catch (e) {
+    console.error('could not read window position; skipping drag', e);
+  }
 });
 
 window.addEventListener('mousemove', (e) => {
@@ -244,6 +253,7 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('mouseup', async () => {
+  dragRequest++;
   if (!moveMode || !dragging) return;
   dragging = false;
   try {
