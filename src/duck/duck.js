@@ -43,9 +43,7 @@ let bubbleTimer = null;
 let chatterTimer = null;
 
 let moveMode = false;
-let dragging = false;
-let startSX = 0, startSY = 0;
-let winX = 0, winY = 0;
+let drag = null;
 let mouseThrough = null; // last value sent to main, so we don't re-send it on every mousemove
 
 // ---- Applying settings ----
@@ -195,6 +193,7 @@ window.api.onConfig(applyConfig); // config with the active skin already applied
 window.api.onQuack(() => quack());
 window.api.onMoveMode((on) => {
   moveMode = on;
+  drag = null;
   document.body.classList.toggle('move-mode', on);
   mouseThrough = null; // main just forced the native ignore-mouse state; forget our cache
 });
@@ -218,21 +217,26 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('mousedown', async (e) => {
   if (!moveMode || e.button !== 0) return;
-  dragging = true;
-  startSX = e.screenX;
-  startSY = e.screenY;
+  e.preventDefault();
+  const currentDrag = { startSX: e.screenX, startSY: e.screenY, pos: null };
+  drag = currentDrag;
   try {
     const pos = await window.api.getWindowPos();
-    winX = pos[0];
-    winY = pos[1];
-  } catch (_) { /* couldn't read the position; skip this drag */ }
-  e.preventDefault();
+    // A release, mode change, or newer press invalidates this asynchronous reply.
+    if (drag !== currentDrag) return;
+    currentDrag.pos = pos;
+  } catch (err) {
+    if (drag === currentDrag) drag = null;
+    console.error('could not read window position', err);
+  }
 });
 
 window.addEventListener('mousemove', (e) => {
   if (moveMode) {
     // in move mode the whole window is grabbable, so leave click-through alone
-    if (dragging) window.api.moveWindow(winX + (e.screenX - startSX), winY + (e.screenY - startSY));
+    if (drag && drag.pos) {
+      window.api.moveWindow(drag.pos[0] + (e.screenX - drag.startSX), drag.pos[1] + (e.screenY - drag.startSY));
+    }
     return;
   }
   // otherwise only the duck takes clicks; everything else falls through to the desktop
@@ -244,8 +248,9 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('mouseup', async () => {
-  if (!moveMode || !dragging) return;
-  dragging = false;
+  const currentDrag = drag;
+  drag = null;
+  if (!moveMode || !currentDrag || !currentDrag.pos) return;
   try {
     const pos = await window.api.getWindowPos();
     window.api.savePosition(pos[0], pos[1]);
