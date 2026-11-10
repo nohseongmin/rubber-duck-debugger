@@ -11,7 +11,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "44.5.1",
+    "electron": "44.10.2",
     "electron-builder": "26.15.3"
   },
   "build": {
@@ -40,5 +40,8 @@
   },
   "dependencies": {
     "adm-zip": "0.6.1"
+  },
+  "overrides": {
+    "minimatch@>=7 <11.0.1": "11.0.5"
   }
 }
