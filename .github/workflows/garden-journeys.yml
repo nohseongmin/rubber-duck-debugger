@@ -1,0 +1,42 @@
+name: Garden journeys
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  installed-duck:
+    name: Windows install and first quack
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run dist -- --win --x64 --publish never
+      - name: Prepare the desktop test driver
+        run: npm install --prefix "$env:RUNNER_TEMP/duck-driver" --no-save --ignore-scripts --no-fund --no-audit playwright-core@1.65.1
+      - name: Install the Windows app
+        run: |
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          $product = $package.build.productName
+          $installed = Join-Path $env:LOCALAPPDATA "Programs/$($package.name)/$product.exe"
+          if (Test-Path -LiteralPath $installed) { throw "Expected a clean runner: $installed already exists" }
+          $setup = Start-Process "dist/$product-Setup.exe" -ArgumentList '/S' -PassThru -Wait
+          if ($setup.ExitCode -ne 0) { throw "Installer exited with $($setup.ExitCode)" }
+          if (!(Test-Path -LiteralPath $installed -PathType Leaf)) { throw "Installer did not create $installed" }
+          "DUCK_EXE=$installed" >> $env:GITHUB_ENV
+      - name: Launch the installed duck and click to quack
+        run: |
+          $env:NODE_PATH = Join-Path $env:RUNNER_TEMP 'duck-driver/node_modules'
+          node test/installed-duck.cjs "$env:DUCK_EXE"
