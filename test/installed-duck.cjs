@@ -17,7 +17,10 @@ async function checkInstalledDuck(executablePath) {
     assert.equal(await window.evaluate(() => document.visibilityState), 'visible');
     const bubble = window.locator('#bubble.show');
     assert.equal(await bubble.count(), 0, 'The speech bubble should appear in response to the click');
-    await image.click();
+    // The duck bobs continuously. Click its center as a user would while it moves.
+    const bounds = await image.boundingBox();
+    assert.ok(bounds, 'The duck needs a visible click target');
+    await window.mouse.click(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
     await bubble.waitFor({ state: 'visible' });
     assert.ok((await bubble.innerText()).trim(), 'Clicking the duck must show a phrase');
   } finally {
